@@ -1,148 +1,126 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  CalendarCheck2, 
-  CalendarDays, 
-  GraduationCap, 
-  Receipt, 
-  FileText, 
-  CalendarOff, 
-  Contact2,
-  School,
-  Users,
-  Award,
-  Megaphone,
-  Database,
-  Building2
-} from 'lucide-react';
 
-export default function Sidebar({ 
-  currentRole, 
-  setCurrentRole, 
-  activeTab, 
-  setActiveTab, 
-  onOpenIdCard, 
-  student 
+export default function Sidebar({
+  currentRole,
+  setCurrentRole,
+  activeTab,
+  setActiveTab,
+  onOpenIdCard,
+  student,
+  mobileOpen = false,
+  setMobileOpen
 }) {
-  const studentItems = [
-    { id: 'dashboard', label: 'Academic Dashboard', icon: LayoutDashboard },
-    { id: 'attendance', label: 'Attendance Register', icon: CalendarCheck2 },
-    { id: 'timetable', label: 'Academic Timetable', icon: CalendarDays },
-    { id: 'exams', label: 'Grades & Transcripts', icon: GraduationCap },
-    { id: 'fees', label: 'Fee Invoices & Receipts', icon: Receipt },
-    { id: 'assignments', label: 'Continuous Assessment', icon: FileText },
-    { id: 'leaves', label: 'Leave & OD Requests', icon: CalendarOff },
+  // Primary Operational Navigation matching the Apex University SIS & ERP design
+  // while exposing every module of the College Portal
+  const navGroups = [
+    {
+      title: 'Operational Navigation',
+      items: [
+        { id: 'executive_overview', label: 'Overview / Dashboard', icon: 'dashboard', roles: ['student', 'faculty', 'admin'] },
+        { id: 'dashboard', label: 'Student Academic Hub', icon: 'school', roles: ['student', 'admin'] },
+        { id: 'admin_console', label: 'Admissions & Enrollment', icon: 'how_to_reg', roles: ['admin', 'faculty', 'student'] },
+        { id: 'attendance', label: 'Attendance & Records', icon: 'fact_check', roles: ['student', 'faculty', 'admin'] },
+        { id: 'faculty_workspace', label: 'Faculty & Staff', icon: 'badge', roles: ['faculty', 'admin', 'student'] },
+        { id: 'timetable', label: 'Academics & Timetable', icon: 'menu_book', roles: ['student', 'faculty', 'admin'] },
+        { id: 'exams', label: 'Grades & Transcripts', icon: 'workspace_premium', roles: ['student', 'faculty', 'admin'] },
+        { id: 'fees', label: 'Financial Operations', icon: 'account_balance', roles: ['student', 'admin', 'faculty'] },
+        { id: 'assignments', label: 'Coursework & CIA', icon: 'assignment', roles: ['student', 'faculty', 'admin'] },
+        { id: 'leaves', label: 'Leaves & Compliance', icon: 'event_busy', roles: ['student', 'faculty', 'admin'] },
+      ]
+    }
   ];
 
-  const facultyItems = [
-    { id: 'faculty_workspace', label: 'Faculty Teaching Console', icon: Users },
-    { id: 'attendance', label: 'Attendance Management', icon: CalendarCheck2 },
-    { id: 'timetable', label: 'Weekly Schedule', icon: CalendarDays },
-    { id: 'exams', label: 'Grade & Mark Entry', icon: Award },
-    { id: 'leaves', label: 'Student Leave Approvals', icon: CalendarOff },
-  ];
-
-  const adminItems = [
-    { id: 'admin_console', label: 'Registry & Admissions', icon: Building2 },
-    { id: 'fees', label: 'Bursar & Accounts', icon: Receipt },
-    { id: 'timetable', label: 'Institutional Timetable', icon: CalendarDays },
-  ];
-
-  const menuItems = currentRole === 'faculty' ? facultyItems : currentRole === 'admin' ? adminItems : studentItems;
+  const handleNavClick = (id) => {
+    setActiveTab(id);
+    if (setMobileOpen) setMobileOpen(false);
+  };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <div className="logo-badge" style={{
-          background: currentRole === 'faculty' ? 'linear-gradient(135deg, #059669, #10b981)' : currentRole === 'admin' ? 'linear-gradient(135deg, #d97706, #f59e0b)' : 'linear-gradient(135deg, #6366f1, #3b82f6)'
-        }}>
-          <School size={24} />
+    <aside
+      className={`fixed left-0 top-0 h-screen w-72 bg-surface-container-low z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] transition-transform duration-200 ${
+        mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}
+    >
+      <div className="flex flex-col flex-1 overflow-y-auto">
+        {/* University Crest & Title */}
+        <div className="h-16 px-space-lg flex items-center gap-space-sm bg-surface-container-low shrink-0">
+          <img
+            alt="Apex University Crest"
+            className="h-8 w-auto object-contain"
+            src="https://lh3.googleusercontent.com/aida/ALJJyrBfDBwWXsNXOxmQwUyv0JggiVKnCLCO1SVu6cav9Amtr35TIKymnzLzOjlRiwe7yBz2NDMfgLSU4A_hqd-N8lmLI84HB1ZCsXBmf2q5KSxy1RyZfkLBxk12vzrowsst8VJ2mNhoVVGB__GseMftDlruxXYoV1B79mau8t5AiaX92mJVMBAm9Ud5CJBnn5_avOPcGbKNL7FY5SkckpIDaL8spe2lyDMClTsc-bGisglYVg"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <div className="flex flex-col">
+            <span className="font-headline-sm text-headline-sm font-bold text-on-surface tracking-tight leading-none">
+              Apex University
+            </span>
+            <span className="font-label-sm text-label-sm text-secondary font-semibold uppercase tracking-wider mt-space-xs">
+              SIS &amp; ERP Portal
+            </span>
+          </div>
         </div>
-        <div className="logo-text">
-          <h2>Apex Portal</h2>
-          <span style={{
-            color: currentRole === 'faculty' ? '#34d399' : currentRole === 'admin' ? '#fbbf24' : 'var(--secondary)'
-          }}>
-            {currentRole === 'faculty' ? 'Faculty Portal' : currentRole === 'admin' ? 'Registrar Console' : 'Student SIS'}
-          </span>
-        </div>
+
+        {/* Navigation Groups */}
+        {navGroups.map((group, gIdx) => (
+          <React.Fragment key={gIdx}>
+            <div className="px-space-md py-space-sm">
+              <div className="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                {group.title}
+              </div>
+            </div>
+            <nav className="px-space-md flex flex-col gap-space-xs">
+              {group.items.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleNavClick(item.id)}
+                    className={`w-full text-left flex items-center gap-space-sm px-space-md py-space-sm rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-secondary text-on-secondary font-semibold shadow-[0_1px_3px_rgba(0,81,213,0.2)] font-label-lg text-label-lg'
+                        : 'font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-xl">{item.icon}</span>
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+
+              {/* Digital Student ID Trigger */}
+              <button
+                type="button"
+                onClick={onOpenIdCard}
+                className="w-full text-left flex items-center justify-between gap-space-sm px-space-md py-space-sm rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150 mt-1"
+              >
+                <div className="flex items-center gap-space-sm">
+                  <span className="material-symbols-outlined text-xl">id_card</span>
+                  <span>Digital Student ID</span>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm uppercase tracking-wider font-semibold">
+                  ID
+                </span>
+              </button>
+            </nav>
+          </React.Fragment>
+        ))}
       </div>
 
-      <nav className="sidebar-nav">
-        <div style={{ padding: '0 8px 8px 8px', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: '700' }}>
-          {currentRole.toUpperCase()} SERVICES
-        </div>
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <div
-              key={item.id}
-              className={`nav-item ${isActive ? 'active' : ''}`}
-              onClick={() => setActiveTab(item.id)}
-            >
-              <Icon />
-              <span>{item.label}</span>
-            </div>
-          );
-        })}
-
-        {currentRole === 'student' && (
-          <>
-            <div style={{ marginTop: '20px', padding: '0 8px 8px 8px', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: '700' }}>
-              Student Identity
-            </div>
-            <div className="nav-item" onClick={onOpenIdCard}>
-              <Contact2 />
-              <span>Student ID Card</span>
-              <span className="badge badge-primary" style={{ marginLeft: 'auto', fontSize: '0.65rem' }}>Verified</span>
-            </div>
-          </>
-        )}
-
-        {currentRole === 'admin' && (
-          <>
-            <div style={{ marginTop: '20px', padding: '0 8px 8px 8px', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: '700' }}>
-              Database Control
-            </div>
-            <a
-              href="http://127.0.0.1:8000/admin/"
-              target="_blank"
-              rel="noreferrer"
-              className="nav-item"
-              style={{ color: '#fbbf24', border: '1px dashed rgba(245, 158, 11, 0.4)' }}
-            >
-              <Database />
-              <span>Raw Django Admin</span>
-            </a>
-          </>
-        )}
-      </nav>
-
-      <div className="sidebar-footer">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '10px',
-            background: currentRole === 'faculty' ? 'linear-gradient(135deg, #059669, #10b981)' : currentRole === 'admin' ? 'linear-gradient(135deg, #d97706, #f59e0b)' : 'linear-gradient(135deg, #4f46e5, #06b6d4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold',
-            color: '#fff',
-            fontSize: '0.9rem'
-          }}>
-            {currentRole === 'faculty' ? 'D' : currentRole === 'admin' ? 'A' : (student?.full_name ? student.full_name.charAt(0) : 'S')}
+      {/* Bottom System Status & Active Context */}
+      <div className="p-space-md bg-surface-container-low flex flex-col gap-space-sm">
+        <div className="bg-surface-container p-space-md rounded-xl flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+              System Status
+            </span>
+            <span className="font-label-md text-label-md text-on-surface font-semibold">
+              All Services Active
+            </span>
           </div>
-          <div style={{ overflow: 'hidden' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-              {currentRole === 'faculty' ? 'Dr. Alok Sharma' : currentRole === 'admin' ? 'Administrator (Dean)' : (student?.full_name || 'Aravind Krishna')}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              {currentRole === 'faculty' ? 'Dept of CSE • Faculty' : currentRole === 'admin' ? 'System Administrator' : `${student?.roll_number || '2023CS1042'} • Sem ${student?.semester || 5}`}
-            </div>
-          </div>
+          <span className="w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-secondary/20"></span>
         </div>
       </div>
     </aside>

@@ -1,7 +1,7 @@
 @echo off
 title College Student ERP Portal Launcher
 echo ========================================================
-echo   Starting College ERP Portal (CampusPulse)
+echo   Starting College ERP Portal (CampusERP)
 echo ========================================================
 echo.
 

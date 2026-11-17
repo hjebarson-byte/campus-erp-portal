@@ -1,19 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Building2, 
-  Users, 
-  GraduationCap, 
-  BookOpen, 
-  Receipt, 
-  ExternalLink, 
-  ShieldCheck, 
-  Database,
-  Plus,
-  CheckCircle2,
-  X,
-  UserPlus,
-  Trash2
-} from 'lucide-react';
 import erpApi from '../api/client';
 
 export default function AdminPortalView({ onDataChanged }) {
@@ -45,7 +30,7 @@ export default function AdminPortalView({ onDataChanged }) {
       setLoading(true);
       const [anRes, stdRes] = await Promise.all([
         erpApi.getAdminAnalytics(),
-        erpApi.getStudents()
+        erpApi.getStudents(),
       ]);
       setAnalytics(anRes);
       setStudents(stdRes);
@@ -73,12 +58,11 @@ export default function AdminPortalView({ onDataChanged }) {
         phone,
         blood_group: bloodGroup,
         guardian_name: guardianName,
-        guardian_phone: guardianPhone
+        guardian_phone: guardianPhone,
       });
 
       setMsg(res.message);
       setShowModal(false);
-      // Reset form
       setFirstName('');
       setLastName('');
       setRollNumber('');
@@ -96,8 +80,10 @@ export default function AdminPortalView({ onDataChanged }) {
     }
   };
 
-  const handleDeleteStudent = async (studentId, studentName, rollNumber) => {
-    const confirmed = window.confirm(`Are you sure you want to permanently delete student "${studentName}" (${rollNumber}) from MySQL database? All their attendance, fee, and grade records will be deleted.`);
+  const handleDeleteStudent = async (studentId, studentName, rollNum) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently expunge student "${studentName}" (${rollNum}) from the SIS database?`
+    );
     if (!confirmed) return;
     try {
       const res = await erpApi.deleteStudent(studentId);
@@ -111,127 +97,212 @@ export default function AdminPortalView({ onDataChanged }) {
   };
 
   if (loading) {
-    return <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading Administration Console...</div>;
+    return (
+      <div className="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm text-center font-body-lg text-on-surface-variant">
+        Loading Admissions &amp; Central Registry...
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Administrative Header */}
-      <div className="welcome-banner">
-        <div>
-          <span className="badge badge-warning">Office of Academic Affairs & Admissions</span>
-          <h2 style={{ fontSize: '1.6rem', color: 'var(--text-primary)', margin: '6px 0 2px 0' }}>
-            Central Registry & Student Administration
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
-            Student Information System (SIS) • Master Records & Enrolment
+    <div className="flex flex-col gap-space-lg">
+      {/* Executive Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+        <div className="flex flex-col gap-space-xs">
+          <div className="flex items-center gap-space-sm flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm uppercase tracking-wider font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+              Office of the University Registrar
+            </span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant font-medium">
+              Master Student Information System (SIS)
+            </span>
+          </div>
+          <h1 className="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
+            Admissions, Enrollment &amp; Academic Registry
+          </h1>
+          <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-on-surface">
+              Central Enrollment &amp; Curriculum Control
+            </span>
+            <span className="text-outline-variant">•</span>
+            <span>{students.length} Live Student Records</span>
+            <span className="text-outline-variant">•</span>
+            <span className="font-medium text-secondary">
+              {analytics?.total_courses || 0} Catalog Courses Active
+            </span>
           </p>
         </div>
 
-        <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            <UserPlus size={16} />
-            <span>Enrol Student</span>
-          </button>
-
+        <div className="flex items-center gap-space-sm flex-wrap shrink-0">
           <a
             href="http://127.0.0.1:8000/admin/"
             target="_blank"
             rel="noreferrer"
-            className="btn btn-outline"
-            style={{ textDecoration: 'none' }}
+            className="inline-flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-lg text-label-lg rounded-lg shadow-sm transition-all no-underline"
           >
-            <Database size={16} />
-            <span>System Administration</span>
-            <ExternalLink size={14} />
+            <span className="material-symbols-outlined text-lg">database</span>
+            <span>Django DB Console</span>
           </a>
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-space-xs px-space-md py-space-sm bg-secondary hover:bg-secondary-container text-on-secondary font-label-lg text-label-lg rounded-lg shadow-md hover:shadow-lg transition-all"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-lg">person_add</span>
+            <span>Register Student</span>
+          </button>
         </div>
       </div>
 
-      {/* Success Notification */}
+      {/* Status Toast */}
       {msg && (
-        <div style={{
-          padding: '14px 20px',
-          borderRadius: '12px',
-          background: 'var(--success-bg)',
-          border: '1px solid rgba(16,185,129,0.4)',
-          color: '#6ee7b7',
-          fontWeight: '600',
-          fontSize: '0.9rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
-          <CheckCircle2 size={18} />
-          <span>{msg}</span>
+        <div className="p-space-md rounded-xl bg-surface-container-low border border-secondary/30 text-on-tertiary-container flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2 font-label-lg text-label-lg font-semibold">
+            <span className="material-symbols-outlined">verified</span>
+            <span>{msg}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMsg(null)}
+            className="text-on-surface-variant hover:text-on-surface"
+          >
+            <span className="material-symbols-outlined text-base">close</span>
+          </button>
         </div>
       )}
 
-      {/* Institutional Metrics */}
-      <div className="stat-grid">
-        <div className="card stat-card">
-          <div className="stat-icon primary">
-            <Users size={26} />
+      {/* 4 KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">
+              Registered Students
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+              <span className="material-symbols-outlined text-lg">groups</span>
+            </div>
           </div>
-          <div className="stat-info">
-            <h4>Total Active Students</h4>
-            <div className="stat-value">{analytics?.total_students || 0}</div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Registered Students</span>
+          <div className="my-space-sm">
+            <div className="font-stat-metric text-stat-metric font-bold text-on-surface tracking-tight">
+              {analytics?.total_students || 0}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="inline-flex items-center text-on-tertiary-container bg-surface-container-low px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+                <span className="material-symbols-outlined text-xs mr-0.5">check_circle</span> Active
+              </span>
+              <span className="font-body-sm text-body-sm text-on-surface-variant">
+                MySQL Verified
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-on-surface-variant pt-space-xs font-label-sm text-label-sm">
+            <span>SIS Roster</span>
+            <span className="font-semibold text-on-surface">100% Indexed</span>
           </div>
         </div>
 
-        <div className="card stat-card">
-          <div className="stat-icon info">
-            <GraduationCap size={26} />
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">
+              Instructional Faculty
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+              <span className="material-symbols-outlined text-lg">co_present</span>
+            </div>
           </div>
-          <div className="stat-info">
-            <h4>Faculty & Instructors</h4>
-            <div className="stat-value">{analytics?.total_faculty || 0}</div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Department Mentors</span>
+          <div className="my-space-sm">
+            <div className="font-stat-metric text-stat-metric font-bold text-on-surface tracking-tight">
+              {analytics?.total_faculty || 0}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="inline-flex items-center text-secondary bg-surface-container px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+                Tenured &amp; Advisors
+              </span>
+              <span className="font-body-sm text-body-sm text-on-surface-variant">In-Charge</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-on-surface-variant pt-space-xs font-label-sm text-label-sm">
+            <span>Departments</span>
+            <span className="font-semibold text-secondary">
+              {analytics?.total_departments || 0} Divisions
+            </span>
           </div>
         </div>
 
-        <div className="card stat-card">
-          <div className="stat-icon success">
-            <Receipt size={26} />
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">
+              Tuition Realization
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+              <span className="material-symbols-outlined text-lg">payments</span>
+            </div>
           </div>
-          <div className="stat-info">
-            <h4>Fee Realization</h4>
-            <div className="stat-value" style={{ color: '#34d399' }}>
+          <div className="my-space-sm">
+            <div className="font-stat-metric text-stat-metric font-bold text-on-surface tracking-tight">
               ₹{analytics?.total_fee_collected?.toLocaleString() || 0}
             </div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              Pending: ₹{analytics?.total_fee_pending?.toLocaleString() || 0}
-            </span>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="inline-flex items-center text-on-tertiary-container bg-surface-container-low px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+                Collected
+              </span>
+              <span className="font-body-sm text-body-sm text-on-surface-variant">
+                Pending: ₹{analytics?.total_fee_pending?.toLocaleString() || 0}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-on-surface-variant pt-space-xs font-label-sm text-label-sm">
+            <span>Bursar Ledger</span>
+            <span className="font-semibold text-on-surface">Audited</span>
           </div>
         </div>
 
-        <div className="card stat-card">
-          <div className="stat-icon warning">
-            <BookOpen size={26} />
-          </div>
-          <div className="stat-info">
-            <h4>Courses Offered</h4>
-            <div className="stat-value">{analytics?.total_courses || 0}</div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              {analytics?.total_departments || 0} Academic Departments
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">
+              Catalog Courses
             </span>
+            <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+              <span className="material-symbols-outlined text-lg">menu_book</span>
+            </div>
+          </div>
+          <div className="my-space-sm">
+            <div className="font-stat-metric text-stat-metric font-bold text-on-surface tracking-tight">
+              {analytics?.total_courses || 0}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="inline-flex items-center text-secondary bg-surface-container px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+                CBCS Accredited
+              </span>
+              <span className="font-body-sm text-body-sm text-on-surface-variant">Active Term</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-on-surface-variant pt-space-xs font-label-sm text-label-sm">
+            <span>Curriculum Status</span>
+            <span className="font-semibold text-on-tertiary-container">Ratified</span>
           </div>
         </div>
       </div>
 
-      {/* Student Roster */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="flex-between" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)' }}>
+      {/* Student Roster Table */}
+      <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+        <div className="p-space-lg flex items-center justify-between border-b border-surface-container flex-wrap gap-2">
           <div>
-            <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Registered Students Directory</h3>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-              Active student roster
-            </div>
+            <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+              Master Student Directory &amp; Enrolment Roster
+            </h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Official university student records with roll number, division, and guardian telemetry
+            </p>
           </div>
-          <button className="btn btn-outline" style={{ padding: '6px 14px', fontSize: '0.8rem' }} onClick={() => setShowModal(true)}>
-            <Plus size={14} />
-            <span>Add Student</span>
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="px-3.5 py-1.5 rounded-lg bg-secondary hover:bg-secondary-container text-on-secondary font-label-sm text-label-sm font-semibold shadow-sm transition-all inline-flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-sm">person_add</span>
+            <span>Add New Enrollee</span>
           </button>
         </div>
 
@@ -240,48 +311,46 @@ export default function AdminPortalView({ onDataChanged }) {
             <thead>
               <tr>
                 <th>Roll Number</th>
-                <th>Full Name</th>
-                <th>Department</th>
+                <th>Full Legal Name</th>
+                <th>Academic Division</th>
                 <th>Semester / Sec</th>
-                <th>Contact</th>
+                <th>Student Contact</th>
                 <th>Guardian Contact</th>
-                <th>Status</th>
-                <th>Action</th>
+                <th>Standing</th>
+                <th>Registry Action</th>
               </tr>
             </thead>
             <tbody>
               {students.map((s) => (
                 <tr key={s.id}>
                   <td>
-                    <span className="badge badge-primary">{s.roll_number}</span>
+                    <span className="px-2.5 py-0.5 rounded bg-secondary/10 text-secondary font-label-sm text-label-sm font-semibold">
+                      {s.roll_number}
+                    </span>
                   </td>
-                  <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
-                    {s.full_name}
+                  <td className="font-semibold text-on-surface">{s.full_name}</td>
+                  <td className="text-on-surface-variant">
+                    {s.department_details?.name || 'Computer Science & Engineering'}
                   </td>
-                  <td>{s.department_details?.name || 'CSE'}</td>
-                  <td>Sem {s.semester} ({s.section})</td>
-                  <td>{s.phone || 'N/A'}</td>
-                  <td>{s.guardian_phone || 'N/A'}</td>
+                  <td className="text-on-surface-variant">
+                    Sem {s.semester} ({s.section})
+                  </td>
+                  <td className="text-on-surface-variant">{s.phone || 'N/A'}</td>
+                  <td className="text-on-surface-variant">{s.guardian_phone || 'N/A'}</td>
                   <td>
-                    <span className="badge badge-success">Enrolled</span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container-low text-on-tertiary-container font-label-sm text-label-sm font-semibold uppercase">
+                      <span className="material-symbols-outlined text-xs">check_circle</span>
+                      Enrolled
+                    </span>
                   </td>
                   <td>
                     <button
-                      className="btn btn-outline"
-                      style={{
-                        padding: '4px 10px',
-                        fontSize: '0.74rem',
-                        color: '#f87171',
-                        borderColor: 'rgba(239, 68, 68, 0.35)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '5px'
-                      }}
+                      type="button"
                       onClick={() => handleDeleteStudent(s.id, s.full_name, s.roll_number)}
-                      title={`Delete ${s.full_name}`}
+                      className="px-2.5 py-1 rounded bg-error/10 hover:bg-error hover:text-on-error text-error font-label-sm text-label-sm font-semibold transition-all inline-flex items-center gap-1"
                     >
-                      <Trash2 size={13} />
-                      <span>Delete</span>
+                      <span className="material-symbols-outlined text-xs">delete</span>
+                      <span>Expunge</span>
                     </button>
                   </td>
                 </tr>
@@ -291,33 +360,47 @@ export default function AdminPortalView({ onDataChanged }) {
         </div>
       </div>
 
-      {/* Academic Curriculum */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)' }}>
-          <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Curriculum & Course Catalog</h3>
+      {/* Course Catalog Table */}
+      <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+        <div className="p-space-lg flex items-center justify-between border-b border-surface-container">
+          <div>
+            <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+              Institutional Curriculum &amp; Course Catalog
+            </h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Accredited courses, credit weightages, and assigned instructional faculty
+            </p>
+          </div>
+          <span className="px-2.5 py-1 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm font-semibold uppercase">
+            CBCS Matrix
+          </span>
         </div>
 
         <div className="table-responsive">
           <table className="custom-table">
             <thead>
               <tr>
-                <th>Code</th>
+                <th>Course Code</th>
                 <th>Course Title</th>
                 <th>Department</th>
                 <th>Semester</th>
-                <th>Credits</th>
+                <th>Credit Weight</th>
                 <th>Faculty In-Charge</th>
               </tr>
             </thead>
             <tbody>
               {analytics?.courses?.map((c) => (
                 <tr key={c.id}>
-                  <td><span className="badge badge-primary">{c.code}</span></td>
-                  <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{c.name}</td>
-                  <td>{c.department_code || 'CSE'}</td>
-                  <td>Sem {c.semester}</td>
-                  <td>{c.credits} Credits</td>
-                  <td>{c.faculty_name}</td>
+                  <td>
+                    <span className="px-2.5 py-0.5 rounded bg-secondary/10 text-secondary font-label-sm text-label-sm font-semibold">
+                      {c.code}
+                    </span>
+                  </td>
+                  <td className="font-semibold text-on-surface">{c.name}</td>
+                  <td className="text-on-surface-variant">{c.department_code || 'CSE'}</td>
+                  <td className="text-on-surface-variant">Sem {c.semester}</td>
+                  <td className="font-medium text-on-surface">{c.credits} Credits</td>
+                  <td className="text-on-surface-variant">{c.faculty_name}</td>
                 </tr>
               ))}
             </tbody>
@@ -325,23 +408,29 @@ export default function AdminPortalView({ onDataChanged }) {
         </div>
       </div>
 
-      {/* Enrolment Modal */}
+      {/* Student Enrolment Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
-            <div className="flex-between" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)' }}>
-              <div className="flex gap-2" style={{ alignItems: 'center' }}>
-                <UserPlus size={20} color="var(--primary)" />
-                <h3 style={{ fontSize: '1.15rem', margin: 0 }}>Student Enrolment</h3>
+            <div className="p-space-lg border-b border-surface-container flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary">person_add</span>
+                <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                  Matriculate New Student Record
+                </h3>
               </div>
-              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                <X size={20} />
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="text-on-surface-variant hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <form onSubmit={handleCreateStudent} style={{ padding: '24px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div className="form-group">
+            <form onSubmit={handleCreateStudent} className="p-space-lg flex flex-col gap-space-md">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <div className="form-group mb-0">
                   <label>First Name *</label>
                   <input
                     type="text"
@@ -352,7 +441,7 @@ export default function AdminPortalView({ onDataChanged }) {
                     placeholder="e.g. Rahul"
                   />
                 </div>
-                <div className="form-group">
+                <div className="form-group mb-0">
                   <label>Last Name</label>
                   <input
                     type="text"
@@ -364,9 +453,9 @@ export default function AdminPortalView({ onDataChanged }) {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '14px' }}>
-                <div className="form-group">
-                  <label>Roll Number * (Unique)</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <div className="form-group mb-0">
+                  <label>University Roll ID * (Unique)</label>
                   <input
                     type="text"
                     className="form-control"
@@ -376,28 +465,38 @@ export default function AdminPortalView({ onDataChanged }) {
                     placeholder="e.g. 2023CS1055"
                   />
                 </div>
-                <div className="form-group">
-                  <label>Department</label>
+                <div className="form-group mb-0">
+                  <label>Academic Department</label>
                   <select
                     className="form-control"
                     value={departmentId}
                     onChange={(e) => setDepartmentId(e.target.value)}
                   >
                     {analytics?.departments?.map((d) => (
-                      <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+                      <option key={d.id} value={d.id}>
+                        {d.name} ({d.code})
+                      </option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
-                <div className="form-group">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
+                <div className="form-group mb-0">
                   <label>Semester</label>
-                  <select className="form-control" value={semester} onChange={(e) => setSemester(e.target.value)}>
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Sem {s}</option>)}
+                  <select
+                    className="form-control"
+                    value={semester}
+                    onChange={(e) => setSemester(e.target.value)}
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <option key={s} value={s}>
+                        Semester {s}
+                      </option>
+                    ))}
                   </select>
                 </div>
-                <div className="form-group">
+                <div className="form-group mb-0">
                   <label>Section</label>
                   <input
                     type="text"
@@ -407,16 +506,24 @@ export default function AdminPortalView({ onDataChanged }) {
                     placeholder="A"
                   />
                 </div>
-                <div className="form-group">
+                <div className="form-group mb-0">
                   <label>Blood Group</label>
-                  <select className="form-control" value={bloodGroup} onChange={(e) => setBloodGroup(e.target.value)}>
-                    {['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map(b => <option key={b} value={b}>{b}</option>)}
+                  <select
+                    className="form-control"
+                    value={bloodGroup}
+                    onChange={(e) => setBloodGroup(e.target.value)}
+                  >
+                    {['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map((b) => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div className="form-group">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <div className="form-group mb-0">
                   <label>Student Phone</label>
                   <input
                     type="text"
@@ -426,8 +533,8 @@ export default function AdminPortalView({ onDataChanged }) {
                     placeholder="+91 98765 00000"
                   />
                 </div>
-                <div className="form-group">
-                  <label>Guardian Phone</label>
+                <div className="form-group mb-0">
+                  <label>Guardian Emergency Phone</label>
                   <input
                     type="text"
                     className="form-control"
@@ -438,17 +545,20 @@ export default function AdminPortalView({ onDataChanged }) {
                 </div>
               </div>
 
-              <div className="info-banner" style={{ marginBottom: '18px' }}>
-                Initial account credentials are generated from the student roll number and default password. Semester fee record will be created automatically.
+              <div className="p-space-sm rounded-lg bg-surface-container-low text-on-surface-variant font-body-sm text-body-sm flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary text-base">info</span>
+                <span>
+                  Initial SIS credentials and semester tuition vouchers are provisioned
+                  automatically upon registration.
+                </span>
               </div>
 
               <button
                 type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '12px' }}
                 disabled={submitting}
+                className="w-full py-2.5 px-4 rounded-xl bg-secondary hover:bg-secondary-container text-on-secondary font-label-lg text-label-lg font-semibold shadow-md transition-all"
               >
-                {submitting ? 'Registering Student...' : 'Register Student'}
+                {submitting ? 'Provisioning SIS Record...' : 'Certify & Register Student'}
               </button>
             </form>
           </div>

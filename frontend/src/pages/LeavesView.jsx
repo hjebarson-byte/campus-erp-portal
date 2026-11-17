@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { CalendarOff, Send, CheckCircle2, Clock, XCircle, Plus, X } from 'lucide-react';
 import erpApi from '../api/client';
 
 export default function LeavesView() {
@@ -32,7 +31,7 @@ export default function LeavesView() {
         leave_type: leaveType,
         start_date: startDate,
         end_date: endDate,
-        reason: reason
+        reason: reason,
       });
       setShowModal(false);
       setReason('');
@@ -46,59 +45,119 @@ export default function LeavesView() {
     }
   };
 
+  const approvedCount = leaves.filter((l) => l.status === 'approved').length;
+  const pendingCount = leaves.filter((l) => l.status === 'pending').length;
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="card flex-between" style={{ flexWrap: 'wrap', gap: '16px' }}>
-        <div>
-          <div className="flex gap-2" style={{ alignItems: 'center', marginBottom: '4px' }}>
-            <CalendarOff size={20} color="var(--primary)" />
-            <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Leave & On-Duty Requests</h3>
+    <div className="flex flex-col gap-space-lg">
+      {/* Executive Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+        <div className="flex flex-col gap-space-xs">
+          <div className="flex items-center gap-space-sm flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm uppercase tracking-wider font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+              Dean of Students • Attendance Exemption Registry
+            </span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant font-medium">
+              Medical &amp; On-Duty (OD) Authorization
+            </span>
           </div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-            Apply for Medical Leaves, On-Duty authorizations, or Personal leaves
+          <h1 className="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
+            Academic Leave &amp; On-Duty (OD) Portal
+          </h1>
+          <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-on-surface">
+              Statutory Leave Verification System
+            </span>
+            <span className="text-outline-variant">•</span>
+            <span>{approvedCount} Approved Exemptions</span>
+            <span className="text-outline-variant">•</span>
+            <span className="font-medium text-secondary">{pendingCount} Awaiting Faculty Review</span>
           </p>
         </div>
 
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          <Plus size={16} />
-          <span>Apply New Leave</span>
+        <button
+          onClick={() => setShowModal(true)}
+          className="inline-flex items-center gap-space-xs px-space-md py-space-sm bg-secondary hover:bg-secondary-container text-on-secondary font-label-lg text-label-lg rounded-lg shadow-md hover:shadow-lg transition-all self-start lg:self-center"
+          type="button"
+        >
+          <span className="material-symbols-outlined text-lg">add_circle</span>
+          <span>File Leave / OD Petition</span>
         </button>
       </div>
 
-      {/* History table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      {/* Leave Applications Data Table */}
+      <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+        <div className="p-space-lg flex items-center justify-between border-b border-surface-container">
+          <div>
+            <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+              Submitted Leave &amp; On-Duty Petitions
+            </h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Chronological audit log of medical, academic duty, and personal leave requests
+            </p>
+          </div>
+          <span className="px-2.5 py-1 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm font-semibold uppercase">
+            {leaves.length} Records
+          </span>
+        </div>
+
         <div className="table-responsive">
           <table className="custom-table">
             <thead>
               <tr>
-                <th>Leave Type</th>
-                <th>Duration</th>
-                <th>Reason</th>
-                <th>Applied On</th>
-                <th>Status</th>
+                <th>Exemption Category</th>
+                <th>Effective Duration</th>
+                <th>Statement of Justification</th>
+                <th>Filed On</th>
+                <th>Adjudication Status</th>
               </tr>
             </thead>
             <tbody>
-              {leaves.map((leave) => (
-                <tr key={leave.id}>
-                  <td>
-                    <span className="badge badge-primary" style={{ textTransform: 'capitalize' }}>
-                      {leave.leave_type}
-                    </span>
-                  </td>
-                  <td style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
-                    {leave.start_date} to {leave.end_date}
-                  </td>
-                  <td style={{ maxWidth: '300px' }}>{leave.reason}</td>
-                  <td>{new Date(leave.applied_at).toLocaleDateString()}</td>
-                  <td>
-                    <span className={`badge ${leave.status === 'approved' ? 'badge-success' : leave.status === 'rejected' ? 'badge-danger' : 'badge-warning'}`}>
-                      {leave.status === 'approved' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                      <span style={{ textTransform: 'capitalize', marginLeft: '4px' }}>{leave.status}</span>
-                    </span>
+              {leaves.length > 0 ? (
+                leaves.map((leave) => (
+                  <tr key={leave.id}>
+                    <td>
+                      <span className="px-2.5 py-0.5 rounded bg-secondary/10 text-secondary font-label-sm text-label-sm font-semibold uppercase">
+                        {leave.leave_type}
+                      </span>
+                    </td>
+                    <td className="font-semibold text-on-surface">
+                      {leave.start_date} <span className="text-outline">→</span> {leave.end_date}
+                    </td>
+                    <td className="text-on-surface-variant max-w-md">{leave.reason}</td>
+                    <td className="text-on-surface-variant">
+                      {new Date(leave.applied_at).toLocaleDateString()}
+                    </td>
+                    <td>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold uppercase ${
+                          leave.status === 'approved'
+                            ? 'bg-surface-container-low text-on-tertiary-container'
+                            : leave.status === 'rejected'
+                            ? 'bg-error/10 text-error'
+                            : 'bg-secondary/10 text-secondary'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-xs">
+                          {leave.status === 'approved'
+                            ? 'check_circle'
+                            : leave.status === 'rejected'
+                            ? 'cancel'
+                            : 'schedule'}
+                        </span>
+                        {leave.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="text-center py-8 text-on-surface-variant">
+                    No leave or On-Duty petitions filed for the current semester.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -108,53 +167,77 @@ export default function LeavesView() {
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
-            <div className="flex-between" style={{ padding: '20px', borderBottom: '1px solid var(--border-color)' }}>
-              <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Apply for Leave / On-Duty</h3>
-              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                <X size={20} />
+            <div className="p-space-lg border-b border-surface-container flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary">event_busy</span>
+                <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                  File Leave / On-Duty Petition
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="text-on-surface-variant hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <form onSubmit={handleApply} style={{ padding: '24px' }}>
-              <div className="form-group">
-                <label>Leave Category</label>
-                <select className="form-control" value={leaveType} onChange={(e) => setLeaveType(e.target.value)}>
-                  <option value="medical">Medical Leave (Doctor Certificate)</option>
-                  <option value="duty">On-Duty (Hackathon / Seminar / Sports)</option>
-                  <option value="personal">Personal / Family Leave</option>
+            <form onSubmit={handleApply} className="p-space-lg flex flex-col gap-space-md">
+              <div className="form-group mb-0">
+                <label>Exemption Category</label>
+                <select
+                  className="form-control"
+                  value={leaveType}
+                  onChange={(e) => setLeaveType(e.target.value)}
+                >
+                  <option value="medical">Medical Leave (Clinical Certificate Required)</option>
+                  <option value="duty">On-Duty (Symposium / Hackathon / Varsity Representation)</option>
+                  <option value="personal">Personal / Emergency Family Leave</option>
                 </select>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="form-group">
-                  <label>Start Date</label>
-                  <input type="date" className="form-control" required value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <div className="form-group mb-0">
+                  <label>Commencement Date *</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    required
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
                 </div>
-                <div className="form-group">
-                  <label>End Date</label>
-                  <input type="date" className="form-control" required value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <div className="form-group mb-0">
+                  <label>Conclusion Date *</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    required
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Reason & Justification</label>
+              <div className="form-group mb-0">
+                <label>Statement of Justification *</label>
                 <textarea
                   className="form-control"
                   rows="3"
                   required
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="Detail the event, condition, or reason..."
-                ></textarea>
+                  placeholder="Provide event details, medical reference, or advisor endorsement..."
+                />
               </div>
 
               <button
                 type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '12px' }}
                 disabled={submitting}
+                className="w-full py-2.5 px-4 rounded-xl bg-secondary hover:bg-secondary-container text-on-secondary font-label-lg text-label-lg font-semibold shadow-md transition-all"
               >
-                {submitting ? 'Submitting Application...' : 'Submit to Department'}
+                {submitting ? 'Filing Petition...' : 'Submit Petition to Faculty Advisor'}
               </button>
             </form>
           </div>

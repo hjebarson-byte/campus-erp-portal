@@ -1,16 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  CalendarCheck2, 
-  Award, 
-  Megaphone, 
-  CheckCircle2, 
-  XCircle, 
-  Sparkles,
-  BookOpen,
-  Send,
-  AlertCircle
-} from 'lucide-react';
 import erpApi from '../api/client';
 
 export default function FacultyPortalView({ onDataChanged }) {
@@ -21,7 +9,7 @@ export default function FacultyPortalView({ onDataChanged }) {
   const [examType, setExamType] = useState('End Semester');
   const [marks, setMarks] = useState('92');
   const [maxMarks, setMaxMarks] = useState('100');
-  
+
   // Notice form
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeCategory, setNoticeCategory] = useState('urgent');
@@ -57,12 +45,16 @@ export default function FacultyPortalView({ onDataChanged }) {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // Record attendance
   const handleMarkAttendance = async (statusVal) => {
     if (!selectedCourse || !selectedStudent) return;
     try {
       const todayStr = new Date().toISOString().split('T')[0];
-      const res = await erpApi.markFacultyAttendance(selectedCourse, selectedStudent, statusVal, todayStr);
+      const res = await erpApi.markFacultyAttendance(
+        selectedCourse,
+        selectedStudent,
+        statusVal,
+        todayStr
+      );
       showMsg(res.message);
       if (onDataChanged) onDataChanged();
     } catch (err) {
@@ -70,7 +62,6 @@ export default function FacultyPortalView({ onDataChanged }) {
     }
   };
 
-  // Submit course grade
   const handleSubmitGrade = async (e) => {
     e.preventDefault();
     if (!selectedCourse || !selectedStudent) return;
@@ -90,7 +81,6 @@ export default function FacultyPortalView({ onDataChanged }) {
     }
   };
 
-  // Publish circular
   const handlePublishNotice = async (e) => {
     e.preventDefault();
     if (!noticeTitle || !noticeContent) return;
@@ -100,9 +90,9 @@ export default function FacultyPortalView({ onDataChanged }) {
         category: noticeCategory,
         content: noticeContent,
         target_role: 'all',
-        is_pinned: noticeCategory === 'urgent'
+        is_pinned: noticeCategory === 'urgent',
       });
-      showMsg('Circular published successfully.');
+      showMsg('Institutional circular published to student noticeboard.');
       setNoticeTitle('');
       setNoticeContent('');
       if (onDataChanged) onDataChanged();
@@ -111,7 +101,6 @@ export default function FacultyPortalView({ onDataChanged }) {
     }
   };
 
-  // Review leave application
   const handleDecideLeave = async (leaveId, decision) => {
     try {
       const res = await erpApi.decideFacultyLeave(leaveId, decision);
@@ -124,256 +113,355 @@ export default function FacultyPortalView({ onDataChanged }) {
   };
 
   if (loading) {
-    return <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading Faculty Workspace...</div>;
+    return (
+      <div className="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm text-center font-body-lg text-on-surface-variant">
+        Loading Faculty Instructional Console...
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Faculty Header */}
-      <div className="welcome-banner">
-        <div>
-          <span className="badge badge-primary">Department of Computer Science & Engineering</span>
-          <h2 style={{ fontSize: '1.6rem', color: 'var(--text-primary)', margin: '6px 0 2px 0' }}>
-            Faculty Workspace: Dr. Alok Sharma
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
-            Associate Professor & Academic Advisor • Department In-Charge
+    <div className="flex flex-col gap-space-lg">
+      {/* Executive Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+        <div className="flex flex-col gap-space-xs">
+          <div className="flex items-center gap-space-sm flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm uppercase tracking-wider font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+              Faculty Instructional Console
+            </span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant font-medium">
+              Department of Computer Science &amp; Engineering
+            </span>
+          </div>
+          <h1 className="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
+            Welcome back, Dr. Alok Sharma
+          </h1>
+          <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-on-surface">
+              Associate Professor &amp; Senior Academic Advisor
+            </span>
+            <span className="text-outline-variant">•</span>
+            <span>Fall 2025 Academic Cycle</span>
+            <span className="text-outline-variant">•</span>
+            <span className="font-medium text-secondary">
+              {data?.courses?.length || 0} Assigned Courses • {data?.students?.length || 0} Advisees
+            </span>
           </p>
         </div>
 
-        <div className="flex gap-2" style={{ alignItems: 'center', background: 'var(--bg-subtle)', padding: '10px 18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-          <BookOpen size={18} color="var(--primary)" />
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Academic Session: <strong style={{ color: 'var(--text-primary)' }}>Odd Semester 2025–26</strong>
-          </span>
+        <div className="flex items-center gap-space-sm flex-wrap shrink-0">
+          <button
+            onClick={fetchFacultyData}
+            className="inline-flex items-center gap-space-xs px-space-md py-space-sm bg-secondary hover:bg-secondary-container text-on-secondary font-label-lg text-label-lg rounded-lg shadow-md transition-all"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-lg">sync</span>
+            <span>Sync Roster</span>
+          </button>
         </div>
       </div>
 
-      {/* Notification Toast */}
+      {/* Notification Banner */}
       {notification && (
-        <div style={{
-          padding: '14px 20px',
-          borderRadius: '12px',
-          background: notification.type === 'error' ? 'var(--danger-bg)' : 'var(--success-bg)',
-          border: notification.type === 'error' ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(16,185,129,0.4)',
-          color: notification.type === 'error' ? '#fca5a5' : '#6ee7b7',
-          fontWeight: '600',
-          fontSize: '0.9rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
-          <CheckCircle2 size={18} />
-          <span>{notification.msg}</span>
+        <div
+          className={`p-space-md rounded-xl border flex items-center justify-between shadow-sm ${
+            notification.type === 'error'
+              ? 'bg-error/10 border-error/30 text-error'
+              : 'bg-surface-container-low border-secondary/30 text-on-tertiary-container'
+          }`}
+        >
+          <div className="flex items-center gap-2 font-label-lg text-label-lg font-semibold">
+            <span className="material-symbols-outlined">
+              {notification.type === 'error' ? 'error' : 'verified'}
+            </span>
+            <span>{notification.msg}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNotification(null)}
+            className="text-on-surface-variant hover:text-on-surface"
+          >
+            <span className="material-symbols-outlined text-base">close</span>
+          </button>
         </div>
       )}
 
-      {/* 2-Column Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
-        
-        {/* Module: Daily Attendance Marker */}
-        <div className="card">
-          <div className="flex gap-2" style={{ alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-            <CalendarCheck2 size={20} color="var(--primary)" />
-            <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Mark Class Attendance</h3>
-          </div>
+      {/* 8-col / 4-col Operational Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+        {/* Left 8 Columns: Attendance Register & Grade Entry */}
+        <div className="lg:col-span-7 flex flex-col gap-space-lg">
+          {/* Mark Daily Class Attendance */}
+          <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+            <div className="flex items-center justify-between border-b border-surface-container pb-space-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary">how_to_reg</span>
+                <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                  Daily Lecture Attendance Register
+                </h2>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm font-semibold">
+                Real-Time SIS Sync
+              </span>
+            </div>
 
-          <div className="form-group">
-            <label>Select Course</label>
-            <select className="form-control" value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)}>
-              {data?.courses?.map(c => (
-                <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Select Student</label>
-            <select className="form-control" value={selectedStudent} onChange={(e) => setSelectedStudent(e.target.value)}>
-              {data?.students?.map(s => (
-                <option key={s.id} value={s.id}>{s.full_name} ({s.roll_number}) - Sem {s.semester}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex gap-2" style={{ marginTop: '20px' }}>
-            <button
-              className="btn btn-success"
-              style={{ flex: 1, padding: '12px' }}
-              onClick={() => handleMarkAttendance('present')}
-            >
-              <CheckCircle2 size={16} />
-              <span>Mark as PRESENT</span>
-            </button>
-            <button
-              className="btn"
-              style={{ flex: 1, padding: '12px', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}
-              onClick={() => handleMarkAttendance('absent')}
-            >
-              <XCircle size={16} />
-              <span>Mark as ABSENT</span>
-            </button>
-          </div>
-          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '10px', textAlign: 'center' }}>
-            Attendance updates reflect immediately across student transcripts and shortfall calculations.
-          </div>
-        </div>
-
-        {/* Module: Grade Submission */}
-        <div className="card">
-          <div className="flex gap-2" style={{ alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-            <Award size={20} color="#fbbf24" />
-            <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Enter / Update Marks & Grades</h3>
-          </div>
-
-          <form onSubmit={handleSubmitGrade}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div className="form-group">
-                <label>Course</label>
-                <select className="form-control" value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)}>
-                  {data?.courses?.map(c => (
-                    <option key={c.id} value={c.id}>{c.code}</option>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+              <div className="form-group mb-0">
+                <label>Select Course Section</label>
+                <select
+                  className="form-control"
+                  value={selectedCourse}
+                  onChange={(e) => setSelectedCourse(e.target.value)}
+                >
+                  {data?.courses?.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.code} — {c.name}
+                    </option>
                   ))}
                 </select>
               </div>
-              <div className="form-group">
-                <label>Exam Assessment</label>
-                <select className="form-control" value={examType} onChange={(e) => setExamType(e.target.value)}>
-                  <option value="End Semester">End Semester Final</option>
-                  <option value="Internal 1">Internal Assessment 1</option>
-                  <option value="Internal 2">Internal Assessment 2</option>
-                  <option value="Practical">Practical Lab</option>
+
+              <div className="form-group mb-0">
+                <label>Select Enrolled Student</label>
+                <select
+                  className="form-control"
+                  value={selectedStudent}
+                  onChange={(e) => setSelectedStudent(e.target.value)}
+                >
+                  {data?.students?.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.full_name} ({s.roll_number}) — Sem {s.semester}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div className="form-group">
-                <label>Marks Scored</label>
+            <div className="flex items-center gap-space-sm pt-space-xs">
+              <button
+                type="button"
+                onClick={() => handleMarkAttendance('present')}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-on-tertiary-container hover:opacity-95 text-on-primary font-label-lg text-label-lg font-semibold shadow-sm transition-all flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-lg">check_circle</span>
+                <span>Certify PRESENT</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleMarkAttendance('absent')}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-error/10 hover:bg-error hover:text-on-error text-error font-label-lg text-label-lg font-semibold transition-all flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-lg">cancel</span>
+                <span>Mark ABSENT</span>
+              </button>
+            </div>
+          </div>
+
+          {/* CBCS Grade & Assessment Entry */}
+          <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+            <div className="flex items-center justify-between border-b border-surface-container pb-space-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary">workspace_premium</span>
+                <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                  CBCS Grade &amp; Marks Submission
+                </h2>
+              </div>
+              <span className="font-label-sm text-label-sm text-on-surface-variant">
+                Controller of Examinations Direct Feed
+              </span>
+            </div>
+
+            <form onSubmit={handleSubmitGrade} className="flex flex-col gap-space-md">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <div className="form-group mb-0">
+                  <label>Course Code</label>
+                  <select
+                    className="form-control"
+                    value={selectedCourse}
+                    onChange={(e) => setSelectedCourse(e.target.value)}
+                  >
+                    {data?.courses?.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.code} — {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group mb-0">
+                  <label>Assessment Category</label>
+                  <select
+                    className="form-control"
+                    value={examType}
+                    onChange={(e) => setExamType(e.target.value)}
+                  >
+                    <option value="End Semester">End Semester Final Examination</option>
+                    <option value="Internal 1">Continuous Internal Assessment 1</option>
+                    <option value="Internal 2">Continuous Internal Assessment 2</option>
+                    <option value="Practical">Laboratory Practical Evaluation</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <div className="form-group mb-0">
+                  <label>Marks Awarded</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    required
+                    value={marks}
+                    onChange={(e) => setMarks(e.target.value)}
+                    placeholder="e.g. 92"
+                  />
+                </div>
+                <div className="form-group mb-0">
+                  <label>Maximum Marks</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={maxMarks}
+                    onChange={(e) => setMaxMarks(e.target.value)}
+                    placeholder="100"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 px-4 rounded-xl bg-secondary hover:bg-secondary-container text-on-secondary font-label-lg text-label-lg font-semibold shadow-md transition-all flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-lg">publish</span>
+                <span>Commit Marks to Student Transcript</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Right 5 Columns: Leave Approval Queue & Circular Broadcast */}
+        <div className="lg:col-span-5 flex flex-col gap-space-lg">
+          {/* Student Leave Approval Queue */}
+          <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-error">event_busy</span>
+                <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                  Leave &amp; OD Adjudication Queue
+                </h2>
+              </div>
+              <span className="px-2 py-0.5 rounded font-label-sm text-label-sm font-bold bg-error/10 text-error">
+                {data?.pending_leaves?.length || 0} Pending
+              </span>
+            </div>
+
+            <div className="space-y-space-sm">
+              {data?.pending_leaves?.length > 0 ? (
+                data.pending_leaves.map((l) => (
+                  <div
+                    key={l.id}
+                    className="p-space-md rounded-xl bg-surface hover:bg-surface-container-low transition-colors flex flex-col gap-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded bg-secondary/10 text-secondary font-label-sm text-label-sm uppercase font-semibold">
+                        {l.leave_type} Petition
+                      </span>
+                      <span className="font-label-sm text-label-sm text-on-surface-variant">
+                        {l.start_date} → {l.end_date}
+                      </span>
+                    </div>
+                    <div className="font-label-lg text-label-lg font-bold text-on-surface">
+                      {l.student_name}{' '}
+                      <span className="text-on-surface-variant font-normal">
+                        ({l.student_roll})
+                      </span>
+                    </div>
+                    <p className="font-body-sm text-body-sm text-on-surface-variant">{l.reason}</p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleDecideLeave(l.id, 'approved')}
+                        className="flex-1 py-1.5 px-3 rounded-lg bg-secondary hover:bg-secondary-container text-on-secondary font-label-sm text-label-sm font-semibold transition-all"
+                      >
+                        Approve Exemption
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDecideLeave(l.id, 'rejected')}
+                        className="flex-1 py-1.5 px-3 rounded-lg bg-surface-container hover:bg-error hover:text-on-error text-error font-label-sm text-label-sm font-semibold transition-all"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-space-md rounded-xl bg-surface text-center font-body-sm text-on-surface-variant">
+                  All student leave petitions have been adjudicated.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Institutional Circular Broadcast */}
+          <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+            <div className="flex items-center justify-between border-b border-surface-container pb-space-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary">campaign</span>
+                <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                  Broadcast Institutional Circular
+                </h2>
+              </div>
+            </div>
+
+            <form onSubmit={handlePublishNotice} className="flex flex-col gap-space-md">
+              <div className="form-group mb-0">
+                <label>Circular Subject Headline *</label>
                 <input
-                  type="number"
+                  type="text"
                   className="form-control"
                   required
-                  value={marks}
-                  onChange={(e) => setMarks(e.target.value)}
-                  placeholder="e.g. 88"
+                  value={noticeTitle}
+                  onChange={(e) => setNoticeTitle(e.target.value)}
+                  placeholder="e.g. End-Semester Practical Examination Schedule"
                 />
               </div>
-              <div className="form-group">
-                <label>Max Marks</label>
-                <input
-                  type="number"
+
+              <div className="form-group mb-0">
+                <label>Classification</label>
+                <select
                   className="form-control"
-                  value={maxMarks}
-                  onChange={(e) => setMaxMarks(e.target.value)}
-                  placeholder="100"
+                  value={noticeCategory}
+                  onChange={(e) => setNoticeCategory(e.target.value)}
+                >
+                  <option value="urgent">Urgent Priority Alert (Pinned)</option>
+                  <option value="academic">Academic &amp; Curriculum Directive</option>
+                  <option value="exam">Controller of Examinations Notice</option>
+                  <option value="event">University Symposium / Event</option>
+                </select>
+              </div>
+
+              <div className="form-group mb-0">
+                <label>Directive Body *</label>
+                <textarea
+                  className="form-control"
+                  rows="3"
+                  required
+                  value={noticeContent}
+                  onChange={(e) => setNoticeContent(e.target.value)}
+                  placeholder="Enter official circular instructions for students and faculty..."
                 />
               </div>
-            </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>
-              <Send size={15} />
-              <span>Save Marks</span>
-            </button>
-          </form>
-        </div>
-
-        {/* Module: Post Announcement */}
-        <div className="card">
-          <div className="flex gap-2" style={{ alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-            <Megaphone size={20} color="#06b6d4" />
-            <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Publish Circular / Notice</h3>
-          </div>
-
-          <form onSubmit={handlePublishNotice}>
-            <div className="form-group">
-              <label>Notice Headline</label>
-              <input
-                type="text"
-                className="form-control"
-                required
-                value={noticeTitle}
-                onChange={(e) => setNoticeTitle(e.target.value)}
-                placeholder="e.g. Practical Exam Seating Matrix"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Category</label>
-              <select className="form-control" value={noticeCategory} onChange={(e) => setNoticeCategory(e.target.value)}>
-                <option value="urgent">Urgent Alert (Pinned)</option>
-                <option value="academic">Academic & Schedule</option>
-                <option value="exam">Examination Circular</option>
-                <option value="event">Campus Event</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Full Content Details</label>
-              <textarea
-                className="form-control"
-                rows="3"
-                required
-                value={noticeContent}
-                onChange={(e) => setNoticeContent(e.target.value)}
-                placeholder="Detailed instructions for students..."
-              ></textarea>
-            </div>
-
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>
-              <Send size={15} />
-              <span>Publish Circular</span>
-            </button>
-          </form>
-        </div>
-
-        {/* Module: Pending Leave Review */}
-        <div className="card">
-          <div className="flex gap-2" style={{ alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-            <Users size={20} color="#10b981" />
-            <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Review Student Leave Requests</h3>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            {data?.pending_leaves?.length > 0 ? (
-              data.pending_leaves.map(l => (
-                <div key={l.id} style={{ background: 'var(--bg-subtle)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                  <div className="flex-between" style={{ alignItems: 'center', marginBottom: '8px' }}>
-                    <span className="badge badge-warning" style={{ textTransform: 'capitalize' }}>{l.leave_type} Leave</span>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{l.start_date} to {l.end_date}</span>
-                  </div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
-                    {l.student_name} ({l.student_roll})
-                  </div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-                    {l.reason}
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      className="btn btn-success"
-                      style={{ flex: 1, padding: '6px 12px', fontSize: '0.78rem' }}
-                      onClick={() => handleDecideLeave(l.id, 'approved')}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="btn btn-outline"
-                      style={{ flex: 1, padding: '6px 12px', fontSize: '0.78rem', color: '#f87171' }}
-                      onClick={() => handleDecideLeave(l.id, 'rejected')}
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-                No pending leave applications to review.
-              </div>
-            )}
+              <button
+                type="submit"
+                className="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-on-surface text-on-primary font-label-lg text-label-lg font-semibold shadow-sm transition-all flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-lg">send</span>
+                <span>Publish Official Circular</span>
+              </button>
+            </form>
           </div>
         </div>
-
       </div>
     </div>
   );

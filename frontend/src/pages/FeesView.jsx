@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Receipt, CheckCircle, Clock, AlertCircle, CreditCard, Printer, X, ShieldCheck } from 'lucide-react';
 import erpApi from '../api/client';
 
 export default function FeesView({ onRefreshParent }) {
@@ -40,45 +39,195 @@ export default function FeesView({ onRefreshParent }) {
     }
   };
 
-  const totalPaid = fees.filter(f => f.status === 'paid').reduce((acc, f) => acc + parseFloat(f.amount), 0);
-  const totalDue = fees.filter(f => f.status !== 'paid').reduce((acc, f) => acc + parseFloat(f.amount), 0);
+  const totalPaid = fees
+    .filter((f) => f.status === 'paid')
+    .reduce((acc, f) => acc + parseFloat(f.amount), 0);
+  const totalDue = fees
+    .filter((f) => f.status !== 'paid')
+    .reduce((acc, f) => acc + parseFloat(f.amount), 0);
+  const paidCount = fees.filter((f) => f.status === 'paid').length;
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Account Summary */}
-      <div className="stat-grid">
-        <div className="card stat-card">
-          <div className="stat-icon success">
-            <CheckCircle size={26} />
+    <div className="flex flex-col gap-space-lg">
+      {/* Executive Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+        <div className="flex flex-col gap-space-xs">
+          <div className="flex items-center gap-space-sm flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm uppercase tracking-wider font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+              Office of the University Bursar
+            </span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant font-medium">
+              Fiscal Year 2025–2026 • Student Financial Services
+            </span>
           </div>
-          <div className="stat-info">
-            <h4>Total Settled Fees</h4>
-            <div className="stat-value">₹{totalPaid.toLocaleString()}</div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Official receipts verified</span>
+          <h1 className="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
+            Financial Operations &amp; Tuition Ledger
+          </h1>
+          <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-on-surface">
+              Student Accounts &amp; Disbursement Division
+            </span>
+            <span className="text-outline-variant">•</span>
+            <span>Automated UPI / NEFT Clearing</span>
+            <span className="text-outline-variant">•</span>
+            <span className="font-medium text-secondary">
+              {paidCount} of {fees.length} Vouchers Settled
+            </span>
+          </p>
+        </div>
+
+        <div className="flex items-center gap-space-sm flex-wrap shrink-0">
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-lg text-label-lg rounded-lg shadow-sm transition-all"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-lg">print</span>
+            <span>Export Ledger</span>
+          </button>
+          <button
+            onClick={fetchFees}
+            className="inline-flex items-center gap-space-xs px-space-md py-space-sm bg-secondary hover:bg-secondary-container text-on-secondary font-label-lg text-label-lg rounded-lg shadow-md transition-all"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-lg">sync</span>
+            <span>Sync Bursar</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 4 KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">
+              Settled Tuition
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+              <span className="material-symbols-outlined text-lg">verified</span>
+            </div>
+          </div>
+          <div className="my-space-sm">
+            <div className="font-stat-metric text-stat-metric font-bold text-on-surface tracking-tight">
+              ₹{totalPaid.toLocaleString()}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="inline-flex items-center text-on-tertiary-container bg-surface-container-low px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+                <span className="material-symbols-outlined text-xs mr-0.5">check_circle</span> Verified
+              </span>
+              <span className="font-body-sm text-body-sm text-on-surface-variant">
+                Receipts Issued
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-on-surface-variant pt-space-xs font-label-sm text-label-sm">
+            <span>Cleared Vouchers</span>
+            <span className="font-semibold text-on-surface">{paidCount} Vouchers</span>
           </div>
         </div>
 
-        <div className="card stat-card">
-          <div className={`stat-icon ${totalDue > 0 ? 'warning' : 'success'}`}>
-            <Receipt size={26} />
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">
+              Outstanding Dues
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+              <span className="material-symbols-outlined text-lg">account_balance_wallet</span>
+            </div>
           </div>
-          <div className="stat-info">
-            <h4>Outstanding Dues</h4>
-            <div className="stat-value" style={{ color: totalDue > 0 ? '#fbbf24' : '#34d399' }}>
+          <div className="my-space-sm">
+            <div className="font-stat-metric text-stat-metric font-bold text-on-surface tracking-tight">
               ₹{totalDue.toLocaleString()}
             </div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              {totalDue > 0 ? 'Pending clearance' : 'All clear for semester'}
+            <div className="flex items-center gap-1.5 mt-1">
+              {totalDue > 0 ? (
+                <span className="inline-flex items-center text-error bg-error/10 px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+                  <span className="material-symbols-outlined text-xs mr-0.5">warning</span> Action Due
+                </span>
+              ) : (
+                <span className="inline-flex items-center text-on-tertiary-container bg-surface-container-low px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+                  Zero Balance
+                </span>
+              )}
+              <span className="font-body-sm text-body-sm text-on-surface-variant">Current Term</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-on-surface-variant pt-space-xs font-label-sm text-label-sm">
+            <span>Registration Hold</span>
+            <span className={`font-semibold ${totalDue > 0 ? 'text-error' : 'text-on-tertiary-container'}`}>
+              {totalDue > 0 ? 'Pending Clearance' : 'Released'}
             </span>
+          </div>
+        </div>
+
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">
+              Payment Gateway
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+              <span className="material-symbols-outlined text-lg">Bolt</span>
+            </div>
+          </div>
+          <div className="my-space-sm">
+            <div className="font-stat-metric text-stat-metric font-bold text-on-surface tracking-tight">
+              Instant
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="inline-flex items-center text-secondary bg-surface-container px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+                UPI / NetBanking
+              </span>
+              <span className="font-body-sm text-body-sm text-on-surface-variant">Zero Surcharge</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-on-surface-variant pt-space-xs font-label-sm text-label-sm">
+            <span>Settlement SLA</span>
+            <span className="font-semibold text-on-surface">Real-Time</span>
+          </div>
+        </div>
+
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">
+              Bursar Audit
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+              <span className="material-symbols-outlined text-lg">policy</span>
+            </div>
+          </div>
+          <div className="my-space-sm">
+            <div className="font-stat-metric text-stat-metric font-bold text-on-surface tracking-tight">
+              Active
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="inline-flex items-center text-on-tertiary-container bg-surface-container-low px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">
+                No Penalties
+              </span>
+              <span className="font-body-sm text-body-sm text-on-surface-variant">Standing</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-on-surface-variant pt-space-xs font-label-sm text-label-sm">
+            <span>Financial Aid</span>
+            <span className="font-semibold text-secondary">Eligible</span>
           </div>
         </div>
       </div>
 
-      {/* Invoices and Payments */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="flex-between" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)' }}>
-          <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Fee Invoices & Payment Ledger</h3>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Academic Year 2026-2027</span>
+      {/* Invoices Data Table */}
+      <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+        <div className="p-space-lg flex items-center justify-between border-b border-surface-container">
+          <div>
+            <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+              Fee Vouchers &amp; Transaction History
+            </h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Itemized tuition, examination, and laboratory fee assessments
+            </p>
+          </div>
+          <span className="px-2.5 py-1 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm font-semibold uppercase">
+            AY 2025–2026
+          </span>
         </div>
 
         <div className="table-responsive">
@@ -87,60 +236,84 @@ export default function FeesView({ onRefreshParent }) {
               <tr>
                 <th>Voucher Description</th>
                 <th>Semester</th>
-                <th>Amount</th>
+                <th>Assessed Amount</th>
                 <th>Due Date</th>
                 <th>Status</th>
-                <th>Transaction / Mode</th>
+                <th>Transaction Reference</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {fees.map((fee) => (
-                <tr key={fee.id}>
-                  <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{fee.title}</td>
-                  <td>Sem {fee.semester}</td>
-                  <td>
-                    <strong style={{ color: 'var(--text-primary)' }}>₹{parseFloat(fee.amount).toLocaleString()}</strong>
-                  </td>
-                  <td>{fee.due_date}</td>
-                  <td>
-                    <span className={`badge ${fee.status === 'paid' ? 'badge-success' : fee.status === 'overdue' ? 'badge-danger' : 'badge-warning'}`}>
-                      {fee.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.82rem' }}>
-                    {fee.status === 'paid' ? (
-                      <div>
-                        <div style={{ color: '#818cf8', fontWeight: '600' }}>{fee.transaction_id}</div>
-                        <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>{fee.payment_mode}</div>
-                      </div>
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>Pending Payment</span>
-                    )}
-                  </td>
-                  <td>
-                    {fee.status === 'paid' ? (
-                      <button
-                        className="btn btn-outline"
-                        style={{ padding: '5px 12px', fontSize: '0.75rem' }}
-                        onClick={() => setReceiptFee(fee)}
-                      >
-                        <Printer size={13} />
-                        <span>Receipt</span>
-                      </button>
-                    ) : (
-                      <button
-                        className="btn btn-primary"
-                        style={{ padding: '6px 14px', fontSize: '0.78rem' }}
-                        onClick={() => setSelectedFee(fee)}
-                      >
-                        <CreditCard size={13} />
-                        <span>Pay Online</span>
-                      </button>
-                    )}
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-8 text-on-surface-variant">
+                    Synchronizing bursar ledger...
                   </td>
                 </tr>
-              ))}
+              ) : (
+                fees.map((fee) => (
+                  <tr key={fee.id}>
+                    <td className="font-semibold text-on-surface">{fee.title}</td>
+                    <td className="text-on-surface-variant">Sem {fee.semester}</td>
+                    <td>
+                      <span className="font-bold text-on-surface">
+                        ₹{parseFloat(fee.amount).toLocaleString()}
+                      </span>
+                    </td>
+                    <td className="text-on-surface-variant">{fee.due_date}</td>
+                    <td>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold uppercase ${
+                          fee.status === 'paid'
+                            ? 'bg-surface-container-low text-on-tertiary-container'
+                            : fee.status === 'overdue'
+                            ? 'bg-error/10 text-error'
+                            : 'bg-secondary/10 text-secondary'
+                        }`}
+                      >
+                        {fee.status}
+                      </span>
+                    </td>
+                    <td>
+                      {fee.status === 'paid' ? (
+                        <div>
+                          <div className="font-label-md text-label-md text-secondary font-semibold">
+                            {fee.transaction_id}
+                          </div>
+                          <div className="font-body-sm text-body-sm text-on-surface-variant">
+                            {fee.payment_mode}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-outline font-body-sm text-body-sm">
+                          Awaiting Disbursement
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {fee.status === 'paid' ? (
+                        <button
+                          type="button"
+                          onClick={() => setReceiptFee(fee)}
+                          className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold transition-all inline-flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-sm">receipt_long</span>
+                          <span>Receipt</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFee(fee)}
+                          className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary-container text-on-secondary font-label-sm text-label-sm font-semibold shadow-sm transition-all inline-flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-sm">credit_card</span>
+                          <span>Pay Online</span>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -149,42 +322,54 @@ export default function FeesView({ onRefreshParent }) {
       {/* Payment Checkout Modal */}
       {selectedFee && (
         <div className="modal-overlay" onClick={() => setSelectedFee(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
-            <div className="flex-between" style={{ padding: '20px', borderBottom: '1px solid var(--border-color)' }}>
-              <div className="flex gap-2" style={{ alignItems: 'center' }}>
-                <ShieldCheck size={20} color="#10b981" />
-                <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Fee Payment Gateway</h3>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+            <div className="p-space-lg border-b border-surface-container flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary">verified_user</span>
+                <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                  University Bursar Payment Gateway
+                </h3>
               </div>
-              <button onClick={() => setSelectedFee(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                <X size={20} />
+              <button
+                type="button"
+                onClick={() => setSelectedFee(null)}
+                className="text-on-surface-variant hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <div style={{ padding: '24px' }}>
-              <div style={{ background: 'var(--bg-subtle)', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Paying for:</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{selectedFee.title}</div>
-                <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#34d399', marginTop: '6px', fontFamily: 'var(--font-heading)' }}>
+            <div className="p-space-lg flex flex-col gap-space-md">
+              <div className="p-space-md rounded-xl bg-surface-container-low border border-surface-dim">
+                <div className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                  Voucher Settlement
+                </div>
+                <div className="font-headline-sm text-headline-sm font-bold text-on-surface mt-0.5">
+                  {selectedFee.title}
+                </div>
+                <div className="font-stat-metric text-stat-metric font-bold text-secondary mt-1">
                   ₹{parseFloat(selectedFee.amount).toLocaleString()}
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Select Payment Mode</label>
+              <div className="form-group mb-0">
+                <label>Payment Instrument</label>
                 <select className="form-control" defaultValue="upi">
-                  <option value="upi">UPI (Google Pay / PhonePe / Paytm)</option>
-                  <option value="netbanking">Internet Banking (HDFC / SBI / ICICI)</option>
-                  <option value="card">Debit / Credit Card</option>
+                  <option value="upi">UPI Instant Clearing (Google Pay / PhonePe)</option>
+                  <option value="netbanking">Institutional NetBanking (SBI / HDFC / ICICI)</option>
+                  <option value="card">Debit / Credit Card (Visa / Mastercard / RuPay)</option>
                 </select>
               </div>
 
               <button
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '12px' }}
+                type="button"
                 disabled={paying}
                 onClick={() => handlePay(selectedFee)}
+                className="w-full py-2.5 px-4 rounded-xl bg-secondary hover:bg-secondary-container text-on-secondary font-label-lg text-label-lg font-semibold shadow-md transition-all"
               >
-                {paying ? 'Processing Payment...' : `Confirm & Pay ₹${parseFloat(selectedFee.amount).toLocaleString()}`}
+                {paying
+                  ? 'Authorizing Settlement...'
+                  : `Authorize & Pay ₹${parseFloat(selectedFee.amount).toLocaleString()}`}
               </button>
             </div>
           </div>
@@ -195,54 +380,78 @@ export default function FeesView({ onRefreshParent }) {
       {receiptFee && (
         <div className="modal-overlay" onClick={() => setReceiptFee(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-            <div className="flex-between" style={{ padding: '20px', borderBottom: '1px solid var(--border-color)' }}>
-              <div className="flex gap-2" style={{ alignItems: 'center' }}>
-                <CheckCircle size={20} color="#10b981" />
-                <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Fee Payment Receipt</h3>
+            <div className="p-space-lg border-b border-surface-container flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-on-tertiary-container">
+                  check_circle
+                </span>
+                <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                  Official Bursar Payment Receipt
+                </h3>
               </div>
-              <button onClick={() => setReceiptFee(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                <X size={20} />
+              <button
+                type="button"
+                onClick={() => setReceiptFee(null)}
+                className="text-on-surface-variant hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <div style={{ padding: '24px', background: 'var(--bg-modal)' }}>
-              <div style={{ border: '2px dashed var(--border-color)', borderRadius: '12px', padding: '20px' }}>
-                <div style={{ textAlign: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>
-                  <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)' }}>APEX INSTITUTE OF TECHNOLOGY</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Student Accounts & Finance Division</div>
+            <div className="p-space-lg flex flex-col gap-space-md">
+              <div className="p-space-lg rounded-xl border-2 border-dashed border-surface-dim bg-surface">
+                <div className="text-center border-b border-surface-dim pb-space-sm mb-space-md">
+                  <div className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                    APEX UNIVERSITY
+                  </div>
+                  <div className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                    Office of the Bursar &amp; Treasury
+                  </div>
                 </div>
 
-                <div className="flex flex-col gap-2" style={{ fontSize: '0.85rem' }}>
-                  <div className="flex-between">
-                    <span style={{ color: 'var(--text-muted)' }}>Transaction Reference:</span>
-                    <strong style={{ color: '#818cf8' }}>{receiptFee.transaction_id}</strong>
+                <div className="space-y-2 font-body-md text-body-md">
+                  <div className="flex justify-between">
+                    <span className="text-on-surface-variant">Transaction Reference:</span>
+                    <strong className="text-secondary">{receiptFee.transaction_id}</strong>
                   </div>
-                  <div className="flex-between">
-                    <span style={{ color: 'var(--text-muted)' }}>Fee Description:</span>
-                    <span style={{ color: 'var(--text-primary)' }}>{receiptFee.title}</span>
+                  <div className="flex justify-between">
+                    <span className="text-on-surface-variant">Voucher Description:</span>
+                    <span className="font-semibold text-on-surface">{receiptFee.title}</span>
                   </div>
-                  <div className="flex-between">
-                    <span style={{ color: 'var(--text-muted)' }}>Payment Date:</span>
-                    <span style={{ color: 'var(--text-primary)' }}>{receiptFee.payment_date || new Date().toISOString().split('T')[0]}</span>
+                  <div className="flex justify-between">
+                    <span className="text-on-surface-variant">Settlement Date:</span>
+                    <span className="text-on-surface">
+                      {receiptFee.payment_date || new Date().toISOString().split('T')[0]}
+                    </span>
                   </div>
-                  <div className="flex-between">
-                    <span style={{ color: 'var(--text-muted)' }}>Mode:</span>
-                    <span style={{ color: 'var(--text-primary)' }}>{receiptFee.payment_mode}</span>
+                  <div className="flex justify-between">
+                    <span className="text-on-surface-variant">Clearing Channel:</span>
+                    <span className="text-on-surface">{receiptFee.payment_mode}</span>
                   </div>
-                  <div className="flex-between" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: '700' }}>Amount Paid:</span>
-                    <strong style={{ color: '#34d399', fontSize: '1.2rem' }}>₹{parseFloat(receiptFee.amount).toLocaleString()}</strong>
+                  <div className="flex justify-between border-t border-surface-dim pt-2 mt-2">
+                    <span className="font-bold text-on-surface">Total Settled:</span>
+                    <strong className="text-on-tertiary-container text-lg">
+                      ₹{parseFloat(receiptFee.amount).toLocaleString()}
+                    </strong>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-2" style={{ marginTop: '20px' }}>
-                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => window.print()}>
-                  <Printer size={16} />
+              <div className="flex items-center gap-space-sm">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex-1 py-2 px-4 rounded-xl bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-lg text-label-lg font-semibold transition-all flex items-center justify-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-lg">print</span>
                   <span>Print Receipt</span>
                 </button>
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setReceiptFee(null)}>
-                  Close
+                <button
+                  type="button"
+                  onClick={() => setReceiptFee(null)}
+                  className="flex-1 py-2 px-4 rounded-xl bg-secondary hover:bg-secondary-container text-on-secondary font-label-lg text-label-lg font-semibold transition-all"
+                >
+                  Done
                 </button>
               </div>
             </div>

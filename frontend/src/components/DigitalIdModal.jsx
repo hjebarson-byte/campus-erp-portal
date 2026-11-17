@@ -1,102 +1,134 @@
 import React from 'react';
-import { X, ShieldCheck, QrCode, Printer, School } from 'lucide-react';
 
 export default function DigitalIdModal({ student, onClose }) {
   if (!student) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
-        <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShieldCheck size={20} color="#10b981" />
-            <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Official Digital Student ID</h3>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+        <div className="p-space-lg border-b border-surface-container flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-secondary">verified_user</span>
+            <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+              Official University Smart ID
+            </h3>
           </div>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-            <X size={20} />
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-on-surface-variant hover:text-on-surface"
+          >
+            <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <div style={{ padding: '24px' }}>
-          {/* Physical ID Card Mockup */}
-          <div style={{
-            background: 'linear-gradient(145deg, #1e1e38 0%, #111429 100%)',
-            border: '2px solid rgba(99, 102, 241, 0.4)',
-            borderRadius: '20px',
-            padding: '24px',
-            color: '#fff',
-            boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 20px rgba(99, 102, 241, 0.25)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            {/* Header with emblem */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '14px', marginBottom: '18px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ background: '#6366f1', padding: '6px', borderRadius: '8px' }}>
-                  <School size={20} color="#fff" />
+        <div className="p-space-lg flex flex-col gap-space-md">
+          {/* Collegiate Executive ID Card */}
+          <div className="rounded-xl overflow-hidden border border-surface-dim shadow-md bg-surface-container-lowest">
+            {/* Top Collegiate Royal Blue Banner */}
+            <div className="bg-secondary text-on-secondary px-space-lg py-space-md flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-surface-container-lowest/15 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-on-secondary text-xl">
+                    school
+                  </span>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: '800', letterSpacing: '0.04em', color: '#fff' }}>APEX INSTITUTE OF TECHNOLOGY</div>
-                  <div style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase' }}>Autonomous • Accredited A++ Grade</div>
+                  <div className="font-headline-sm text-label-lg font-bold tracking-tight leading-none">
+                    APEX UNIVERSITY
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider opacity-85 mt-0.5 font-semibold">
+                    Office of the Registrar • Verified Credential
+                  </div>
                 </div>
               </div>
+              <span className="px-2 py-0.5 rounded bg-surface-container-lowest/20 text-[10px] font-bold uppercase tracking-wider">
+                Active
+              </span>
             </div>
 
-            {/* Photo & Main Details */}
-            <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start' }}>
-              <div style={{
-                width: '95px',
-                height: '115px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px solid rgba(255,255,255,0.2)',
-                flexShrink: 0
-              }}>
-                <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+            {/* Body */}
+            <div className="p-space-lg flex gap-space-md items-start bg-surface">
+              <div className="w-24 h-28 rounded-xl bg-secondary/10 border-2 border-secondary/20 flex flex-col items-center justify-center shrink-0 text-secondary">
+                <span className="font-display-lg text-3xl font-bold">
                   {student.full_name?.charAt(0) || 'A'}
-                </div>
-                <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.8)', letterSpacing: '0.05em' }}>STUDENT</span>
+                </span>
+                <span className="font-label-sm text-[10px] uppercase tracking-wider mt-1 font-semibold">
+                  Scholar
+                </span>
               </div>
 
-              <div style={{ flex: 1, fontSize: '0.82rem' }}>
-                <div style={{ fontSize: '1.15rem', fontWeight: '700', color: '#fff', marginBottom: '4px' }}>
+              <div className="flex-1 min-w-0">
+                <div className="font-headline-sm text-headline-sm font-bold text-on-surface truncate">
                   {student.full_name || 'Aravind Krishna'}
                 </div>
-                <div style={{ color: '#818cf8', fontWeight: '600', marginBottom: '8px' }}>
-                  Roll: {student.roll_number || '2023CS1042'}
+                <div className="font-label-md text-label-md text-secondary font-semibold mt-0.5">
+                  ID: {student.roll_number || '2023CS1042'}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', color: '#cbd5e1', fontSize: '0.75rem' }}>
-                  <div><strong>Branch:</strong> {student.department_details?.code || 'CSE'}</div>
-                  <div><strong>Sem:</strong> {student.semester || 5} (Sec {student.section || 'A'})</div>
-                  <div><strong>Blood Grp:</strong> {student.blood_group || 'O+'}</div>
-                  <div><strong>Valid Thru:</strong> 2027</div>
+                <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 mt-3 font-body-sm text-body-sm text-on-surface-variant">
+                  <div>
+                    <span className="text-outline block text-[10px] uppercase font-semibold">
+                      Division
+                    </span>
+                    <strong className="text-on-surface">
+                      {student.department_details?.code || 'CSE'}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-outline block text-[10px] uppercase font-semibold">
+                      Term / Sec
+                    </span>
+                    <strong className="text-on-surface">
+                      Sem {student.semester || 5} ({student.section || 'A'})
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-outline block text-[10px] uppercase font-semibold">
+                      Blood Group
+                    </span>
+                    <strong className="text-on-surface">{student.blood_group || 'O+'}</strong>
+                  </div>
+                  <div>
+                    <span className="text-outline block text-[10px] uppercase font-semibold">
+                      Valid Thru
+                    </span>
+                    <strong className="text-on-tertiary-container">May 2027</strong>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Bottom Barcode / QR Simulation */}
-            <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {/* Footer with QR & Emergency Contact */}
+            <div className="px-space-lg py-space-md bg-surface-container-low border-t border-surface-container flex items-center justify-between">
               <div>
-                <div style={{ fontSize: '0.62rem', color: '#94a3b8' }}>EMERGENCY CONTACT</div>
-                <div style={{ fontSize: '0.75rem', fontWeight: '600' }}>{student.guardian_phone || '+91 98401 23456'}</div>
+                <div className="text-[10px] uppercase tracking-wider text-on-surface-variant font-semibold">
+                  Emergency Guardian Contact
+                </div>
+                <div className="font-label-md text-label-md text-on-surface font-bold">
+                  {student.guardian_phone || '+91 98401 23456'}
+                </div>
               </div>
-              <div style={{ background: '#fff', padding: '6px', borderRadius: '6px' }}>
-                <QrCode size={36} color="#0f172a" />
+              <div className="p-1.5 bg-surface-container-lowest rounded-lg border border-surface-dim flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl text-on-surface">qr_code_2</span>
               </div>
             </div>
           </div>
 
-          <div style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
-            <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => window.print()}>
-              <Printer size={16} />
-              <span>Print ID Card</span>
+          <div className="flex items-center gap-space-sm">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="flex-1 py-2 px-4 rounded-xl bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-lg text-label-lg font-semibold transition-all flex items-center justify-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-lg">print</span>
+              <span>Print Credential</span>
             </button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={onClose}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2 px-4 rounded-xl bg-secondary hover:bg-secondary-container text-on-secondary font-label-lg text-label-lg font-semibold transition-all"
+            >
               Done
             </button>
           </div>
