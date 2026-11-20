@@ -6,6 +6,8 @@ export default function FeesView({ onRefreshParent }) {
   const [loading, setLoading] = useState(false);
   const [selectedFee, setSelectedFee] = useState(null);
   const [paying, setPaying] = useState(false);
+  const [paymentMode, setPaymentMode] = useState('UPI Instant Clearing (Google Pay / PhonePe)');
+  const [payError, setPayError] = useState(null);
   const [receiptFee, setReceiptFee] = useState(null);
 
   useEffect(() => {
@@ -27,13 +29,15 @@ export default function FeesView({ onRefreshParent }) {
   const handlePay = async (fee) => {
     try {
       setPaying(true);
-      const res = await erpApi.payFee(fee.id, 'Online UPI (Auto-Settled)');
+      setPayError(null);
+      const res = await erpApi.payFee(fee.id, paymentMode);
       setReceiptFee(res.fee);
       setSelectedFee(null);
       await fetchFees();
       if (onRefreshParent) onRefreshParent();
     } catch (err) {
       console.error('Payment error:', err);
+      setPayError(err.response?.data?.error || 'Payment failed. Please try again.');
     } finally {
       setPaying(false);
     }
@@ -167,7 +171,7 @@ export default function FeesView({ onRefreshParent }) {
               Payment Gateway
             </span>
             <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
-              <span className="material-symbols-outlined text-lg">Bolt</span>
+              <span className="material-symbols-outlined text-lg">bolt</span>
             </div>
           </div>
           <div className="my-space-sm">
@@ -352,12 +356,28 @@ export default function FeesView({ onRefreshParent }) {
                 </div>
               </div>
 
+              {payError && (
+                <div className="p-space-sm rounded-lg bg-error/10 text-error font-label-md text-label-md">
+                  {payError}
+                </div>
+              )}
+
               <div className="form-group mb-0">
                 <label>Payment Instrument</label>
-                <select className="form-control" defaultValue="upi">
-                  <option value="upi">UPI Instant Clearing (Google Pay / PhonePe)</option>
-                  <option value="netbanking">Institutional NetBanking (SBI / HDFC / ICICI)</option>
-                  <option value="card">Debit / Credit Card (Visa / Mastercard / RuPay)</option>
+                <select
+                  className="form-control"
+                  value={paymentMode}
+                  onChange={(e) => setPaymentMode(e.target.value)}
+                >
+                  <option value="UPI Instant Clearing (Google Pay / PhonePe)">
+                    UPI Instant Clearing (Google Pay / PhonePe)
+                  </option>
+                  <option value="Institutional NetBanking (SBI / HDFC / ICICI)">
+                    Institutional NetBanking (SBI / HDFC / ICICI)
+                  </option>
+                  <option value="Debit / Credit Card (Visa / Mastercard / RuPay)">
+                    Debit / Credit Card (Visa / Mastercard / RuPay)
+                  </option>
                 </select>
               </div>
 

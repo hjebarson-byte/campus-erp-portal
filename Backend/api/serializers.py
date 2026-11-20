@@ -126,9 +126,13 @@ class AssignmentSerializer(serializers.ModelSerializer):
         return obj.submissions.count()
 
     def get_my_submission(self, obj):
-        request = self.context.get('request')
-        if request and hasattr(request.user, 'profile'):
-            sub = obj.submissions.filter(student=request.user.profile).first()
+        student = self.context.get('student')
+        if not student:
+            request = self.context.get('request')
+            if request and hasattr(request.user, 'profile'):
+                student = request.user.profile
+        if student:
+            sub = obj.submissions.filter(student=student).first()
             if sub:
                 return AssignmentSubmissionSerializer(sub).data
         return None

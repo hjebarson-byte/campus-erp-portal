@@ -109,7 +109,9 @@ def dashboard_overview(request):
     pending_assignments = Assignment.objects.filter(
         course__semester=student.semester
     ).exclude(submissions__student=student).order_by('due_date')[:4]
-    assignments_data = AssignmentSerializer(pending_assignments, many=True, context={'request': request}).data
+    assignments_data = AssignmentSerializer(
+        pending_assignments, many=True, context={'request': request, 'student': student}
+    ).data
 
     recent_notices = Notice.objects.all().order_by('-is_pinned', '-created_at')[:4]
     notices_data = NoticeSerializer(recent_notices, many=True).data
@@ -178,17 +180,26 @@ def toggle_attendance_record(request):
     """Update student attendance status for a given course and date."""
     course_id = request.data.get('course_id')
     status_val = request.data.get('status', 'present')
-    date_val = request.data.get('date', datetime.date.today().strftime('%Y-%m-%d'))
+    date_val = request.data.get('date') or datetime.date.today().strftime('%Y-%m-%d')
     student = get_current_or_default_student(request)
 
     if not student or not course_id:
         return Response({'error': 'Student and course_id required'}, status=status.HTTP_400_BAD_REQUEST)
 
+    valid_statuses = {choice[0] for choice in AttendanceRecord.STATUS_CHOICES}
+    if status_val not in valid_statuses:
+        return Response({'error': f'Invalid status "{status_val}". Must be one of {sorted(valid_statuses)}.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        parsed_date = datetime.date.fromisoformat(str(date_val))
+    except (ValueError, TypeError):
+        return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+
     course = get_object_or_404(Course, id=course_id)
     record, created = AttendanceRecord.objects.update_or_create(
         student=student,
         course=course,
-        date=date_val,
+        date=parsed_date,
         defaults={'status': status_val}
     )
     return Response({'message': 'Attendance updated', 'record': AttendanceRecordSerializer(record).data})
@@ -199,7 +210,12 @@ def toggle_attendance_record(request):
 def timetable_schedule(request):
     """Retrieve course schedule, optionally filtered by day or semester."""
     student = get_current_or_default_student(request)
-    semester = request.query_params.get('semester', student.semester if student else 1)
+    semester_raw = request.query_params.get('semester', student.semester if student else 1)
+    try:
+        semester = int(semester_raw)
+    except (ValueError, TypeError):
+        return Response({'error': 'Invalid semester parameter.'}, status=status.HTTP_400_BAD_REQUEST)
+
     day = request.query_params.get('day')
 
     query = TimetableEntry.objects.filter(semester=semester)
@@ -218,7 +234,12 @@ def exam_results(request):
     if not student:
         return Response({'grades': [], 'sgpa': 0.0, 'cgpa': 0.0})
 
-    semester = request.query_params.get('semester', student.semester)
+    semester_raw = request.query_params.get('semester', student.semester)
+    try:
+        semester = int(semester_raw)
+    except (ValueError, TypeError):
+        return Response({'error': 'Invalid semester parameter.'}, status=status.HTTP_400_BAD_REQUEST)
+
     grades = ExamGrade.objects.filter(student=student, semester=semester)
 
     total_credits = 0
@@ -262,9 +283,18 @@ def fee_history(request):
 def pay_fee_mock(request):
     """Process student fee payment and generate transaction reference."""
     fee_id = request.data.get('fee_id')
-    mode = request.data.get('payment_mode', 'UPI (Google Pay / PhonePe)')
+    mode = (request.data.get('payment_mode') or 'UPI (Google Pay / PhonePe)').strip()
+
+    if not fee_id:
+        return Response({'error': 'fee_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     fee = get_object_or_404(FeeRecord, id=fee_id)
+    if fee.status == 'paid':
+        return Response(
+            {'error': 'This fee voucher has already been settled.', 'fee': FeeRecordSerializer(fee).data},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     fee.status = 'paid'
     fee.payment_date = datetime.date.today()
     fee.transaction_id = f"TXN-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}-{fee.id}"
@@ -301,7 +331,9 @@ def assignments_list(request):
     student = get_current_or_default_student(request)
     sem = student.semester if student else 1
     assignments = Assignment.objects.filter(course__semester=sem).order_by('due_date')
-    return Response(AssignmentSerializer(assignments, many=True, context={'request': request}).data)
+    return Response(
+        AssignmentSerializer(assignments, many=True, context={'request': request, 'student': student}).data
+    )
 
 
 @api_view(['POST'])
@@ -309,8 +341,11 @@ def assignments_list(request):
 def submit_assignment(request):
     student = get_current_or_default_student(request)
     assignment_id = request.data.get('assignment_id')
-    submission_text = request.data.get('submission_text', '')
-    file_attachment = request.data.get('file_attachment', 'document_submission.pdf')
+    submission_text = (request.data.get('submission_text') or '').strip()
+    file_attachment = (request.data.get('file_attachment') or 'document_submission.pdf').strip()
+
+    if not student or not assignment_id:
+        return Response({'error': 'Student and assignment_id are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     assignment = get_object_or_404(Assignment, id=assignment_id)
     sub, created = AssignmentSubmission.objects.update_or_create(
@@ -339,10 +374,38 @@ def leave_applications(request):
         return Response(LeaveApplicationSerializer(leaves, many=True).data)
 
     elif request.method == 'POST':
+        if not student:
+            return Response({'error': 'No active student profile found.'}, status=status.HTTP_400_BAD_REQUEST)
+
         leave_type = request.data.get('leave_type', 'medical')
-        start_date = request.data.get('start_date')
-        end_date = request.data.get('end_date')
-        reason = request.data.get('reason')
+        start_date_raw = request.data.get('start_date')
+        end_date_raw = request.data.get('end_date')
+        reason = (request.data.get('reason') or '').strip()
+
+        valid_types = {choice[0] for choice in LeaveApplication.TYPE_CHOICES}
+        if leave_type not in valid_types:
+            return Response(
+                {'error': f'Invalid leave_type "{leave_type}". Must be one of {sorted(valid_types)}.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not start_date_raw or not end_date_raw or not reason:
+            return Response(
+                {'error': 'start_date, end_date, and reason are required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            start_date = datetime.date.fromisoformat(str(start_date_raw))
+            end_date = datetime.date.fromisoformat(str(end_date_raw))
+        except (ValueError, TypeError):
+            return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if end_date < start_date:
+            return Response(
+                {'error': 'End date cannot be earlier than start date.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         leave = LeaveApplication.objects.create(
             student=student,
@@ -382,7 +445,19 @@ def faculty_mark_attendance(request):
     course_id = request.data.get('course_id')
     student_id = request.data.get('student_id')
     status_val = request.data.get('status', 'present')
-    date_val = request.data.get('date', datetime.date.today().strftime('%Y-%m-%d'))
+    date_val = request.data.get('date') or datetime.date.today().strftime('%Y-%m-%d')
+
+    if not course_id or not student_id:
+        return Response({'error': 'course_id and student_id are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    valid_statuses = {choice[0] for choice in AttendanceRecord.STATUS_CHOICES}
+    if status_val not in valid_statuses:
+        return Response({'error': f'Invalid status "{status_val}".'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        parsed_date = datetime.date.fromisoformat(str(date_val))
+    except (ValueError, TypeError):
+        return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
 
     student = get_object_or_404(UserProfile, id=student_id)
     course = get_object_or_404(Course, id=course_id)
@@ -391,7 +466,7 @@ def faculty_mark_attendance(request):
     record, created = AttendanceRecord.objects.update_or_create(
         student=student,
         course=course,
-        date=date_val,
+        date=parsed_date,
         defaults={'status': status_val, 'marked_by': faculty}
     )
     return Response({
@@ -406,10 +481,37 @@ def faculty_submit_grade(request):
     """Enter or update student examination marks."""
     student_id = request.data.get('student_id')
     course_id = request.data.get('course_id')
-    semester = request.data.get('semester', 5)
     exam_type = request.data.get('exam_type', 'End Semester')
-    marks = float(request.data.get('marks', 85.0))
-    max_marks = float(request.data.get('max_marks', 100.0))
+
+    if not student_id or not course_id:
+        return Response({'error': 'student_id and course_id are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    valid_exam_types = {choice[0] for choice in ExamGrade.EXAM_TYPE_CHOICES}
+    if exam_type not in valid_exam_types:
+        return Response({'error': f'Invalid exam_type "{exam_type}".'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        marks = float(request.data.get('marks', 85.0))
+        max_marks = float(request.data.get('max_marks', 100.0))
+    except (ValueError, TypeError):
+        return Response({'error': 'marks and max_marks must be valid numbers.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if max_marks <= 0:
+        return Response({'error': 'max_marks must be greater than 0.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if marks < 0 or marks > max_marks:
+        return Response({'error': f'marks ({marks}) must be between 0 and max_marks ({max_marks}).'}, status=status.HTTP_400_BAD_REQUEST)
+
+    student = get_object_or_404(UserProfile, id=student_id)
+    course = get_object_or_404(Course, id=course_id)
+
+    semester_raw = request.data.get('semester', course.semester)
+    try:
+        semester = int(semester_raw)
+    except (ValueError, TypeError):
+        return Response({'error': 'semester must be a valid integer.'}, status=status.HTTP_400_BAD_REQUEST)
+    if semester < 1 or semester > 8:
+        return Response({'error': 'semester must be between 1 and 8.'}, status=status.HTTP_400_BAD_REQUEST)
 
     pct = (marks / max_marks) * 100
     if pct >= 90:
@@ -424,9 +526,6 @@ def faculty_submit_grade(request):
         gp, gl = 6.0, 'B'
     else:
         gp, gl = 0.0, 'F'
-
-    student = get_object_or_404(UserProfile, id=student_id)
-    course = get_object_or_404(Course, id=course_id)
 
     grade, _ = ExamGrade.objects.update_or_create(
         student=student,
@@ -454,6 +553,12 @@ def faculty_decide_leave(request):
     leave_id = request.data.get('leave_id')
     decision = request.data.get('status', 'approved')
     reason = request.data.get('decision_reason', 'Verified by Faculty In-Charge')
+
+    if not leave_id:
+        return Response({'error': 'leave_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if decision not in ('approved', 'rejected'):
+        return Response({'error': 'Decision status must be "approved" or "rejected".'}, status=status.HTTP_400_BAD_REQUEST)
 
     leave = get_object_or_404(LeaveApplication, id=leave_id)
     leave.status = decision
@@ -512,8 +617,13 @@ def admin_create_student(request):
     username = data.get('username') or roll_number.lower()
     password = data.get('password') or 'student123'
     department_id = data.get('department_id')
-    semester = int(data.get('semester', 1))
-    section = data.get('section', 'A')
+    try:
+        semester = int(data.get('semester', 1))
+    except (ValueError, TypeError):
+        return Response({'error': 'Semester must be an integer between 1 and 8.'}, status=status.HTTP_400_BAD_REQUEST)
+    if semester < 1 or semester > 8:
+        return Response({'error': 'Semester must be between 1 and 8.'}, status=status.HTTP_400_BAD_REQUEST)
+    section = (data.get('section') or 'A').strip()[:10] or 'A'
     phone = data.get('phone', '')
     blood_group = data.get('blood_group', 'O+')
     guardian_name = data.get('guardian_name', '')

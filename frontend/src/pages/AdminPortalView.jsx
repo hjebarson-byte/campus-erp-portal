@@ -8,6 +8,7 @@ export default function AdminPortalView({ onDataChanged }) {
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [formError, setFormError] = useState(null);
 
   // Form State
   const [firstName, setFirstName] = useState('');
@@ -46,23 +47,29 @@ export default function AdminPortalView({ onDataChanged }) {
 
   const handleCreateStudent = async (e) => {
     e.preventDefault();
+    setFormError(null);
+    if (!firstName.trim() || !rollNumber.trim()) {
+      setFormError('First Name and Roll Number are required.');
+      return;
+    }
     try {
       setSubmitting(true);
       const res = await erpApi.createStudent({
-        first_name: firstName,
-        last_name: lastName,
-        roll_number: rollNumber,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        roll_number: rollNumber.trim(),
         department_id: departmentId,
         semester: parseInt(semester, 10),
-        section,
-        phone,
+        section: section.trim() || 'A',
+        phone: phone.trim(),
         blood_group: bloodGroup,
-        guardian_name: guardianName,
-        guardian_phone: guardianPhone,
+        guardian_name: guardianName.trim(),
+        guardian_phone: guardianPhone.trim(),
       });
 
       setMsg(res.message);
       setShowModal(false);
+      setFormError(null);
       setFirstName('');
       setLastName('');
       setRollNumber('');
@@ -74,7 +81,7 @@ export default function AdminPortalView({ onDataChanged }) {
       if (onDataChanged) onDataChanged();
       setTimeout(() => setMsg(null), 5000);
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to create student');
+      setFormError(err.response?.data?.error || 'Failed to register student.');
     } finally {
       setSubmitting(false);
     }
@@ -429,6 +436,12 @@ export default function AdminPortalView({ onDataChanged }) {
             </div>
 
             <form onSubmit={handleCreateStudent} className="p-space-lg flex flex-col gap-space-md">
+              {formError && (
+                <div className="p-space-sm rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md">
+                  {formError}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
                 <div className="form-group mb-0">
                   <label>First Name *</label>

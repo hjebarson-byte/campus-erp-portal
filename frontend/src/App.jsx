@@ -23,7 +23,6 @@ export default function App() {
   const [attendanceList, setAttendanceList] = useState([]);
   const [studentsList, setStudentsList] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [apiError, setApiError] = useState(null);
 
@@ -80,7 +79,6 @@ export default function App() {
         'Unable to connect to Django API server. Please ensure backend is running at http://127.0.0.1:8000'
       );
     } finally {
-      setLoading(false);
       setIsRefreshing(false);
     }
   };
@@ -191,23 +189,31 @@ export default function App() {
               )}
 
               {/* Timetable */}
-              {activeTab === 'timetable' && <TimetableView />}
+              {activeTab === 'timetable' && <TimetableView key={selectedStudentId || 'default'} />}
 
               {/* Grades & Transcripts */}
-              {activeTab === 'exams' && <ExamsView student={dashboardData?.student} />}
+              {activeTab === 'exams' && (
+                <ExamsView key={selectedStudentId || 'default'} student={dashboardData?.student} />
+              )}
 
               {/* Financial Operations & Fees */}
               {activeTab === 'fees' && (
-                <FeesView onRefreshParent={() => loadStudentData(selectedStudentId)} />
+                <FeesView
+                  key={selectedStudentId || 'default'}
+                  onRefreshParent={() => loadStudentData(selectedStudentId)}
+                />
               )}
 
               {/* Coursework & CIA */}
               {activeTab === 'assignments' && (
-                <AssignmentsView onRefreshParent={() => loadStudentData(selectedStudentId)} />
+                <AssignmentsView
+                  key={selectedStudentId || 'default'}
+                  onRefreshParent={() => loadStudentData(selectedStudentId)}
+                />
               )}
 
               {/* Leave & OD Portal */}
-              {activeTab === 'leaves' && <LeavesView />}
+              {activeTab === 'leaves' && <LeavesView key={selectedStudentId || 'default'} />}
 
               {/* Faculty & Staff Workspace */}
               {activeTab === 'faculty_workspace' && (

@@ -65,19 +65,34 @@ export default function FacultyPortalView({ onDataChanged }) {
   const handleSubmitGrade = async (e) => {
     e.preventDefault();
     if (!selectedCourse || !selectedStudent) return;
+
+    const numericMarks = parseFloat(marks);
+    const numericMax = parseFloat(maxMarks);
+    if (Number.isNaN(numericMarks) || Number.isNaN(numericMax) || numericMax <= 0) {
+      showMsg('Marks and Max Marks must be valid numbers (Max Marks > 0).', 'error');
+      return;
+    }
+    if (numericMarks < 0 || numericMarks > numericMax) {
+      showMsg(`Marks scored must be between 0 and ${numericMax}.`, 'error');
+      return;
+    }
+
+    const courseObj = data?.courses?.find((c) => String(c.id) === String(selectedCourse));
+    const targetSemester = courseObj?.semester || 5;
+
     try {
       const res = await erpApi.submitFacultyGrade(
         selectedStudent,
         selectedCourse,
-        5,
+        targetSemester,
         examType,
-        parseFloat(marks),
-        parseFloat(maxMarks)
+        numericMarks,
+        numericMax
       );
       showMsg(res.message);
       if (onDataChanged) onDataChanged();
     } catch (err) {
-      showMsg('Failed to submit grade', 'error');
+      showMsg(err.response?.data?.error || 'Failed to submit grade', 'error');
     }
   };
 

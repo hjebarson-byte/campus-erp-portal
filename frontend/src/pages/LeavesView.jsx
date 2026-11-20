@@ -9,6 +9,7 @@ export default function LeavesView() {
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState(null);
 
   useEffect(() => {
     fetchLeaves();
@@ -25,21 +26,38 @@ export default function LeavesView() {
 
   const handleApply = async (e) => {
     e.preventDefault();
+    setFormError(null);
+
+    if (!startDate || !endDate) {
+      setFormError('Both commencement and conclusion dates are required.');
+      return;
+    }
+    if (endDate < startDate) {
+      setFormError('Conclusion date cannot be earlier than commencement date.');
+      return;
+    }
+    if (!reason.trim()) {
+      setFormError('Please provide a reason and justification for your leave.');
+      return;
+    }
+
     try {
       setSubmitting(true);
       await erpApi.applyLeave({
         leave_type: leaveType,
         start_date: startDate,
         end_date: endDate,
-        reason: reason,
+        reason: reason.trim(),
       });
       setShowModal(false);
       setReason('');
       setStartDate('');
       setEndDate('');
+      setFormError(null);
       await fetchLeaves();
     } catch (err) {
       console.error('Apply leave error:', err);
+      setFormError(err.response?.data?.error || 'Failed to submit leave application.');
     } finally {
       setSubmitting(false);
     }
@@ -184,6 +202,12 @@ export default function LeavesView() {
             </div>
 
             <form onSubmit={handleApply} className="p-space-lg flex flex-col gap-space-md">
+              {formError && (
+                <div className="p-space-sm rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md">
+                  {formError}
+                </div>
+              )}
+
               <div className="form-group mb-0">
                 <label>Exemption Category</label>
                 <select
